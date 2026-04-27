@@ -11,6 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+// 传动（Transmission）头文件
+// 定义了传动系统的抽象基类，提供关节空间与执行器空间之间的坐标变换
+
 #ifndef TRANSMISSION_INTERFACE__TRANSMISSION_HPP_
 #define TRANSMISSION_INTERFACE__TRANSMISSION_HPP_
 

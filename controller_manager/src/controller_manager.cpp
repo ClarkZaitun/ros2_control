@@ -12,6 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 控制器管理器（ControllerManager）实现文件
+// 本文件是 ros2_control 框架的核心组件，负责管理所有控制器的生命周期。
+// 主要功能：
+// 1. 控制器的加载、卸载、配置、激活、停用
+// 2. 控制器与硬件接口之间的命令/状态接口匹配
+// 3. 控制器链式调用的管理
+// 4. 控制器切换（switch）操作
+// 5. 实时更新循环中的控制器执行
+
 #include "controller_manager/controller_manager.hpp"
 
 #include <fmt/compile.h>

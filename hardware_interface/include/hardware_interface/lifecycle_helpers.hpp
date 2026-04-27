@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 生命周期辅助（LifecycleHelpers）头文件
+// 提供硬件组件生命周期管理的辅助函数
+
 #ifndef HARDWARE_INTERFACE__LIFECYCLE_HELPERS_HPP_
 #define HARDWARE_INTERFACE__LIFECYCLE_HELPERS_HPP_
 

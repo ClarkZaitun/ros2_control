@@ -14,6 +14,9 @@
 
 /// \author Sai Kishor Kothakota
 
+// 关节范围限位器（JointRangeLimiter）实现文件
+// 本文件实现了关节范围限位器，用于限制关节运动范围。
+
 #include "joint_limits/joint_saturation_limiter.hpp"
 
 #include <algorithm>

@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 力矩传感器语义组件头文件
+// 提供力矩传感器的语义化接口，封装力（Fx,Fy,Fz）和力矩（Tx,Ty,Tz）的状态访问
+
 #ifndef SEMANTIC_COMPONENTS__FORCE_TORQUE_SENSOR_HPP_
 #define SEMANTIC_COMPONENTS__FORCE_TORQUE_SENSOR_HPP_
 

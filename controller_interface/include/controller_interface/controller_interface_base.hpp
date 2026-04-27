@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 控制器接口基类（ControllerInterfaceBase）头文件
+// 定义了控制器接口的抽象基类，提供控制器生命周期管理
+// 包括命令/状态接口的声明、获取和生命周期状态转换
+
 #ifndef CONTROLLER_INTERFACE__CONTROLLER_INTERFACE_BASE_HPP_
 #define CONTROLLER_INTERFACE__CONTROLLER_INTERFACE_BASE_HPP_
 

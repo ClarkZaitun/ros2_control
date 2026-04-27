@@ -14,6 +14,9 @@
 
 /// \author Adrià Roig Moreno
 
+// 关节限位辅助函数头文件
+// 提供关节限位计算中的辅助函数声明
+
 #ifndef JOINT_LIMITS__JOINT_LIMITS_HELPERS_HPP_
 #define JOINT_LIMITS__JOINT_LIMITS_HELPERS_HPP_
 

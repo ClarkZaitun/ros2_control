@@ -14,6 +14,9 @@
 
 /// \author Adolfo Rodriguez Tsouroukdissian
 
+// 关节限位ROS参数头文件
+// 提供从ROS参数服务器读取关节限位配置的函数
+
 #ifndef JOINT_LIMITS__JOINT_LIMITS_ROSPARAM_HPP_
 #define JOINT_LIMITS__JOINT_LIMITS_ROSPARAM_HPP_
 

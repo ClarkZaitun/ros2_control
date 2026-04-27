@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 执行器（Actuator）头文件
+// 定义了执行器组件类，是对 ActuatorInterface 的包装
+// 继承自 HardwareComponent，提供执行器专用的生命周期管理
+
 #ifndef HARDWARE_INTERFACE__ACTUATOR_HPP_
 #define HARDWARE_INTERFACE__ACTUATOR_HPP_
 

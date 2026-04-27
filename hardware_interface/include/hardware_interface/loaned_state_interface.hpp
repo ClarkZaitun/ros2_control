@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 借用状态接口（LoanedStateInterface）头文件
+// 定义了状态接口的RAII包装类
+// 控制器通过此类读取硬件状态数据
+
 #ifndef HARDWARE_INTERFACE__LOANED_STATE_INTERFACE_HPP_
 #define HARDWARE_INTERFACE__LOANED_STATE_INTERFACE_HPP_
 

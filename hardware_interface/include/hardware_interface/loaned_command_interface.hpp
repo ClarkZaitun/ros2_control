@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 借用命令接口（LoanedCommandInterface）头文件
+// 定义了命令接口的RAII包装类，在析构时自动释放命令接口的声明
+// 控制器通过此类在生命周期内持有命令接口的访问权
+
 #ifndef HARDWARE_INTERFACE__LOANED_COMMAND_INTERFACE_HPP_
 #define HARDWARE_INTERFACE__LOANED_COMMAND_INTERFACE_HPP_
 

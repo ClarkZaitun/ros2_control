@@ -16,6 +16,9 @@
 // Author: Denis Stogl
 //
 
+// 硬件组件信息（HardwareComponentInfo）头文件
+// 定义了用于运行时查询的硬件组件状态信息结构
+
 #ifndef HARDWARE_INTERFACE__HARDWARE_COMPONENT_INFO_HPP_
 #define HARDWARE_INTERFACE__HARDWARE_COMPONENT_INFO_HPP_
 

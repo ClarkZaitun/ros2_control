@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 四连杆传动加载器头文件
+// 定义了四连杆传动的加载器类
+
 #ifndef TRANSMISSION_INTERFACE__FOUR_BAR_LINKAGE_TRANSMISSION_LOADER_HPP_
 #define TRANSMISSION_INTERFACE__FOUR_BAR_LINKAGE_TRANSMISSION_LOADER_HPP_
 

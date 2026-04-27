@@ -12,6 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 硬件组件接口（HardwareComponentInterface）头文件
+// 定义了所有硬件插件（执行器、传感器、系统）的抽象基类
+// 提供生命周期回调、接口导出、异步操作等核心功能
+// 用户通过继承此类并实现虚函数来创建自定义硬件插件
+
 #ifndef HARDWARE_INTERFACE__HARDWARE_COMPONENT_INTERFACE_HPP_
 #define HARDWARE_INTERFACE__HARDWARE_COMPONENT_INTERFACE_HPP_
 

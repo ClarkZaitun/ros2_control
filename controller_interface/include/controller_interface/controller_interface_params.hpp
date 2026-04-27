@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 控制器接口参数头文件
+// 定义了控制器初始化和配置所需的参数结构
+
 #ifndef CONTROLLER_INTERFACE__CONTROLLER_INTERFACE_PARAMS_HPP_
 #define CONTROLLER_INTERFACE__CONTROLLER_INTERFACE_PARAMS_HPP_
 

@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 简单传动（SimpleTransmission）头文件
+// 实现了简单的单关节传动，支持机械减速比和偏移量
+
 #ifndef TRANSMISSION_INTERFACE__SIMPLE_TRANSMISSION_HPP_
 #define TRANSMISSION_INTERFACE__SIMPLE_TRANSMISSION_HPP_
 

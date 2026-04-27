@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 差速传动（DifferentialTransmission）头文件
+// 实现了差速传动机构，将两个执行器映射到两个关节
+
 #ifndef TRANSMISSION_INTERFACE__DIFFERENTIAL_TRANSMISSION_HPP_
 #define TRANSMISSION_INTERFACE__DIFFERENTIAL_TRANSMISSION_HPP_
 

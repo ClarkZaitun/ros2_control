@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 传动接口句柄头文件
+// 定义了传动系统中使用的关节和执行器句柄类
+
 #ifndef TRANSMISSION_INTERFACE__HANDLE_HPP_
 #define TRANSMISSION_INTERFACE__HANDLE_HPP_
 

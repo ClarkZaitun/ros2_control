@@ -14,6 +14,10 @@
 
 /// \author Denis Stogl
 
+// 关节限位器接口（JointLimiterInterface）头文件
+// 定义了关节限位器的模板基类接口
+// 提供限位器的初始化、执行和重置等虚函数
+
 #ifndef JOINT_LIMITS__JOINT_LIMITER_INTERFACE_HPP_
 #define JOINT_LIMITS__JOINT_LIMITER_INTERFACE_HPP_
 

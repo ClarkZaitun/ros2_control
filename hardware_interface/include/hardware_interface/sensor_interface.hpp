@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 传感器接口（SensorInterface）头文件
+// 定义了传感器硬件接口，继承自 HardwareComponentInterface
+// 传感器只有状态接口，没有命令接口
+
 #ifndef HARDWARE_INTERFACE__SENSOR_INTERFACE_HPP_
 #define HARDWARE_INTERFACE__SENSOR_INTERFACE_HPP_
 

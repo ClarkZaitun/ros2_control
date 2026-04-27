@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 语义组件命令接口头文件
+// 定义了语义组件的命令接口，支持对硬件的高级命令操作
+
 #ifndef SEMANTIC_COMPONENTS__SEMANTIC_COMPONENT_COMMAND_INTERFACE_HPP_
 #define SEMANTIC_COMPONENTS__SEMANTIC_COMPONENT_COMMAND_INTERFACE_HPP_
 

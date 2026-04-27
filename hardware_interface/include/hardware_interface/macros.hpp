@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 宏定义（Macros）头文件
+// 提供硬件接口模块中使用的宏定义
+
 #ifndef HARDWARE_INTERFACE__MACROS_HPP_
 #define HARDWARE_INTERFACE__MACROS_HPP_
 

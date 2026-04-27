@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 词法转换（LexicalCasts）头文件
+// 提供与区域设置无关的字符串到数值的转换函数
+// 避免 std::stod/std::stof 受本地化设置影响的问题
+
 #ifndef HARDWARE_INTERFACE__LEXICAL_CASTS_HPP_
 #define HARDWARE_INTERFACE__LEXICAL_CASTS_HPP_
 

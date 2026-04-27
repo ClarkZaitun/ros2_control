@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 资源管理器参数定义
+// 定义了 ResourceManagerParams 和 ResourceManagerParams 结构体
+
 #ifndef HARDWARE_INTERFACE__TYPES__RESOURCE_MANAGER_PARAMS_HPP_
 #define HARDWARE_INTERFACE__TYPES__RESOURCE_MANAGER_PARAMS_HPP_
 

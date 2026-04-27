@@ -14,6 +14,9 @@
 
 /// \author Sai Kishor Kothakota
 
+// 统计类型定义
+// 定义了硬件组件执行时间和周期性的统计收集器
+
 #ifndef HARDWARE_INTERFACE__TYPES__STATISTICS_TYPES_HPP_
 #define HARDWARE_INTERFACE__TYPES__STATISTICS_TYPES_HPP_
 

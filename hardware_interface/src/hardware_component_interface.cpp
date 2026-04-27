@@ -12,6 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 硬件组件接口（HardwareComponentInterface）实现文件
+// 本文件实现了硬件组件接口的核心逻辑，包括：
+// 1. 硬件组件的初始化流程（插件加载、异步处理器设置、ROS节点创建、状态发布）
+// 2. 状态/命令接口的导出
+// 3. 异步读写操作的触发机制
+// 4. 生命周期状态管理
+// HardwareComponentInterface 是所有硬件插件（执行器、传感器、系统）的基类
+
 #include "hardware_interface/hardware_component_interface.hpp"
 
 #include <algorithm>
@@ -24,6 +32,7 @@
 namespace hardware_interface
 {
 
+// 内部实现类，使用 Pimpl 模式隐藏实现细节
 class HardwareComponentInterface::HardwareComponentInterfaceImpl
 {
 public:
@@ -47,6 +56,7 @@ public:
   rclcpp::TimerBase::SharedPtr hardware_status_timer_;
 };
 
+// 构造函数：初始生命周期状态设为 UNKNOWN
 HardwareComponentInterface::HardwareComponentInterface()
 : lifecycle_state_(
     rclcpp_lifecycle::State(
@@ -55,6 +65,7 @@ HardwareComponentInterface::HardwareComponentInterface()
 {
 }
 
+// 析构函数：停止并重置异步处理器线程
 HardwareComponentInterface::~HardwareComponentInterface()
 {
   if (async_handler_)
@@ -64,6 +75,13 @@ HardwareComponentInterface::~HardwareComponentInterface()
   async_handler_.reset();
 }
 
+// 初始化硬件组件接口：这是硬件组件的完整初始化流程
+// 1. 设置时钟和日志
+// 2. 如果是异步组件，创建并启动异步处理线程
+// 3. 创建 ROS2 节点并添加到执行器
+// 4. 设置硬件状态发布器（如果配置了 status_publish_rate）
+// 5. 解析接口描述（根据硬件类型：actuator/sensor/system）
+// 6. 调用用户自定义的 on_init 方法
 CallbackReturn HardwareComponentInterface::init(
   const hardware_interface::HardwareComponentParams & params)
 {
@@ -251,6 +269,10 @@ return_type HardwareComponentInterface::update_hardware_status_message(
   return return_type::OK;
 }
 
+// 默认的 on_init 实现：根据硬件类型解析接口描述
+// actuator: 解析关节的状态和命令接口
+// sensor: 解析关节和传感器的状态接口
+// system: 解析关节、传感器、GPIO的状态和命令接口
 CallbackReturn HardwareComponentInterface::on_init(
   const hardware_interface::HardwareComponentInterfaceParams & params)
 {
@@ -301,6 +323,8 @@ HardwareComponentInterface::export_unlisted_state_interface_descriptions()
   return {};
 }
 
+// 新版状态接口导出方法：根据接口描述自动创建 StateInterface 对象
+// 包括未列出的接口、关节状态接口、传感器状态接口和GPIO状态接口
 std::vector<StateInterface::ConstSharedPtr> HardwareComponentInterface::on_export_state_interfaces()
 {
   // import the unlisted interfaces
@@ -363,6 +387,8 @@ HardwareComponentInterface::export_unlisted_command_interface_descriptions()
   return {};
 }
 
+// 新版命令接口导出方法：根据接口描述自动创建 CommandInterface 对象
+// 包括未列出的接口、关节命令接口和GPIO命令接口
 std::vector<CommandInterface::SharedPtr> HardwareComponentInterface::on_export_command_interfaces()
 {
   // import the unlisted interfaces
@@ -418,6 +444,9 @@ return_type HardwareComponentInterface::perform_command_mode_switch(
   return return_type::OK;
 }
 
+// 触发读取操作：根据是否为异步组件采用不同的读取策略
+// 异步组件：触发异步回调并返回上一次的结果
+// 同步组件：直接调用 read() 方法并测量执行时间
 HardwareComponentCycleStatus HardwareComponentInterface::trigger_read(
   const rclcpp::Time & time, const rclcpp::Duration & period)
 {
@@ -455,6 +484,7 @@ HardwareComponentCycleStatus HardwareComponentInterface::trigger_read(
   return status;
 }
 
+// 触发写入操作：异步组件直接返回缓存的结果，同步组件直接调用 write()
 HardwareComponentCycleStatus HardwareComponentInterface::trigger_write(
   const rclcpp::Time & time, const rclcpp::Duration & period)
 {
@@ -556,6 +586,7 @@ rclcpp::Node::SharedPtr HardwareComponentInterface::get_node() const
 
 const HardwareInfo & HardwareComponentInterface::get_hardware_info() const { return info_; }
 
+// 暂停异步操作：如果存在异步处理器，则暂停其执行
 void HardwareComponentInterface::pause_async_operations()
 
 {
@@ -565,6 +596,7 @@ void HardwareComponentInterface::pause_async_operations()
   }
 }
 
+// 激活前的准备工作：重置读写返回信息和执行时间
 void HardwareComponentInterface::prepare_for_activation()
 {
   impl_->read_return_info_.store(return_type::OK, std::memory_order_release);
@@ -573,6 +605,7 @@ void HardwareComponentInterface::prepare_for_activation()
   impl_->write_execution_time_.store(std::chrono::nanoseconds::zero(), std::memory_order_release);
 }
 
+// 启用或禁用内省（统计数据收集）
 void HardwareComponentInterface::enable_introspection(bool enable)
 {
   if (enable)

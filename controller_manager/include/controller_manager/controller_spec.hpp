@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 控制器规格（ControllerSpec）头文件
+// 定义了控制器的内部规格结构，包含控制器实例和相关信息的存储
+
 /*
  * Author: Wim Meeussen
  */

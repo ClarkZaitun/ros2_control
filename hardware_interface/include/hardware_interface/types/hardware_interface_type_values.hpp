@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 硬件接口类型值定义
+// 定义了标准接口名称常量，如 HW_IF_POSITION、HW_IF_VELOCITY、HW_IF_EFFORT 等
+
 #ifndef HARDWARE_INTERFACE__TYPES__HARDWARE_INTERFACE_TYPE_VALUES_HPP_
 #define HARDWARE_INTERFACE__TYPES__HARDWARE_INTERFACE_TYPE_VALUES_HPP_
 

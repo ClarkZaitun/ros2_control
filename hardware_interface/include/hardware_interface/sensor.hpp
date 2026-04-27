@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 传感器（Sensor）头文件
+// 定义了传感器组件类，是对 SensorInterface 的包装
+// 继承自 HardwareComponent，提供传感器专用的生命周期管理
+
 #ifndef HARDWARE_INTERFACE__SENSOR_HPP_
 #define HARDWARE_INTERFACE__SENSOR_HPP_
 

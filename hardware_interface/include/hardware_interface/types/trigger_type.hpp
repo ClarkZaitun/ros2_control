@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 触发类型定义
+// 定义了硬件组件读写操作的触发类型
+
 #ifndef HARDWARE_INTERFACE__TYPES__TRIGGER_TYPE_HPP_
 #define HARDWARE_INTERFACE__TYPES__TRIGGER_TYPE_HPP_
 

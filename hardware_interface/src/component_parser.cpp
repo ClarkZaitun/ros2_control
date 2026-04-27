@@ -12,6 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 组件解析器（Component Parser）实现文件
+// 本文件负责从 URDF/SDF XML 描述中解析 ros2_control 硬件配置信息
+// 主要功能：
+// 1. 解析 <ros2_control> 标签下的硬件组件配置
+// 2. 解析关节（joint）、传感器（sensor）、GPIO、传动（transmission）等子组件
+// 3. 解析命令/状态接口的定义
+// 4. 解析异步参数、读写速率等配置
+// 5. 从 URDF 中提取关节限位信息并与 ros2_control 配置合并
+
 #include <fmt/compile.h>
 #include <tinyxml2.h>
 
@@ -992,6 +1001,13 @@ void update_interface_limits(const ComponentInfo & joint, joint_limits::JointLim
 
 }  // namespace detail
 
+// 从 URDF 字符串解析所有 ros2_control 硬件资源信息
+// 这是该文件的主入口函数，流程：
+// 1. 验证并解析 URDF XML
+// 2. 查找 <ros2_control> 标签
+// 3. 解析每个硬件组件的配置
+// 4. 处理 mimic 关节信息
+// 5. 合并 URDF 中的关节限位与 ros2_control 中的接口限位
 std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & urdf)
 {
   // Check if everything OK with URDF string

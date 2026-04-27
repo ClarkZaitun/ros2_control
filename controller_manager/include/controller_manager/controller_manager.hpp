@@ -12,6 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 控制管理器（ControllerManager）头文件
+// 定义了 ros2_control 框架的核心控制器管理类
+// 负责控制器的加载、配置、激活、停用、卸载和切换
+// 协调控制器与硬件资源之间的接口分配
+
 #ifndef CONTROLLER_MANAGER__CONTROLLER_MANAGER_HPP_
 #define CONTROLLER_MANAGER__CONTROLLER_MANAGER_HPP_
 

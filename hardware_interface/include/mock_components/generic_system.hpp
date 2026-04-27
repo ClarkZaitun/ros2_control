@@ -14,6 +14,10 @@
 //
 // Author: Jafar Abdi, Denis Stogl
 
+// 通用模拟系统（GenericSystem）头文件
+// 定义了用于测试和仿真的模拟硬件系统类
+// 支持命令回环、动力学计算和模仿关节
+
 #ifndef MOCK_COMPONENTS__GENERIC_SYSTEM_HPP_
 #define MOCK_COMPONENTS__GENERIC_SYSTEM_HPP_
 

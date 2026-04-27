@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 传动接口异常头文件
+// 定义了传动接口的专用异常类
+
 #ifndef TRANSMISSION_INTERFACE__TRANSMISSION_INTERFACE_EXCEPTION_HPP_
 #define TRANSMISSION_INTERFACE__TRANSMISSION_INTERFACE_EXCEPTION_HPP_
 

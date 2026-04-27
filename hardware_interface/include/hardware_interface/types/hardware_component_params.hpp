@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 硬件组件参数定义
+// 定义了 HardwareComponentParams 结构体，用于硬件组件初始化时的参数传递
+
 #ifndef HARDWARE_INTERFACE__TYPES__HARDWARE_COMPONENT_PARAMS_HPP_
 #define HARDWARE_INTERFACE__TYPES__HARDWARE_COMPONENT_PARAMS_HPP_
 

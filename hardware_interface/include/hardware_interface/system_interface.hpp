@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 系统接口（SystemInterface）头文件
+// 定义了系统级硬件接口，继承自 HardwareComponentInterface
+// 用于控制多个关节和传感器的复杂硬件系统
+
 #ifndef HARDWARE_INTERFACE__SYSTEM_INTERFACE_HPP_
 #define HARDWARE_INTERFACE__SYSTEM_INTERFACE_HPP_
 

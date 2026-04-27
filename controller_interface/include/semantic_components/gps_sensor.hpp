@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// GPS传感器语义组件头文件
+// 提供GPS传感器的语义化接口，封装GPS定位数据的状态访问
+
 #ifndef SEMANTIC_COMPONENTS__GPS_SENSOR_HPP_
 #define SEMANTIC_COMPONENTS__GPS_SENSOR_HPP_
 

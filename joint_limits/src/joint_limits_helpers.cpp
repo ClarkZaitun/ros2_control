@@ -14,6 +14,9 @@
 
 /// \author Adrià Roig Moreno
 
+// 关节限位辅助函数实现文件
+// 本文件提供了关节限位计算中使用的辅助函数，包括限位值的裁剪和边界检查等。
+
 #include "joint_limits/joint_limits_helpers.hpp"
 
 #include <fmt/compile.h>

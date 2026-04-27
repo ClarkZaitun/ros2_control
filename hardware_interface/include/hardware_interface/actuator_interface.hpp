@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 执行器接口（ActuatorInterface）头文件
+// 定义了单关节执行器的硬件接口，继承自 HardwareComponentInterface
+// 用于控制单个电机或执行器
+
 #ifndef HARDWARE_INTERFACE__ACTUATOR_INTERFACE_HPP_
 #define HARDWARE_INTERFACE__ACTUATOR_INTERFACE_HPP_
 

@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 控制器信息（ControllerInfo）头文件
+// 定义了硬件层所需的控制器信息结构
+
 #ifndef HARDWARE_INTERFACE__CONTROLLER_INFO_HPP_
 #define HARDWARE_INTERFACE__CONTROLLER_INFO_HPP_
 

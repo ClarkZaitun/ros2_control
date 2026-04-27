@@ -12,6 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 资源管理器（ResourceManager）头文件
+// 定义了 ros2_control 框架的核心资源管理类
+// 负责管理所有硬件组件、状态/命令接口的存储和可用性
+// 是控制器管理器与硬件层之间的桥梁
+
 #ifndef HARDWARE_INTERFACE__RESOURCE_MANAGER_HPP_
 #define HARDWARE_INTERFACE__RESOURCE_MANAGER_HPP_
 

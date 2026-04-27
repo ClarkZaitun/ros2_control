@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 可链式控制器接口（ChainableControllerInterface）实现文件
+// 本文件实现了可链式调用的控制器接口，允许控制器导出状态和参考接口供其他控制器使用。
+// 主要功能：控制器链式调用、导出状态/参考接口、管理链式控制器之间的数据传递。
+
 #include "controller_interface/chainable_controller_interface.hpp"
 
 #include <fmt/compile.h>

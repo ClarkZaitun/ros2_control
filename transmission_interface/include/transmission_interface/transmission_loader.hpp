@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 传动加载器（TransmissionLoader）头文件
+// 定义了从 URDF 加载传动配置的抽象接口
+
 #ifndef TRANSMISSION_INTERFACE__TRANSMISSION_LOADER_HPP_
 #define TRANSMISSION_INTERFACE__TRANSMISSION_LOADER_HPP_
 

@@ -14,6 +14,15 @@
 //
 // Author: Jafar Abdi, Denis Stogl
 
+// 通用模拟系统（GenericSystem）实现文件
+// 这是一个用于测试和仿真的模拟硬件组件，实现了 SystemInterface 接口
+// 主要功能：
+// 1. 将命令接口的值镜像到状态接口（命令回环/loopback）
+// 2. 支持简单的动力学计算（位置、速度、加速度积分）
+// 3. 支持模拟传感器和 GPIO 的命令接口
+// 4. 支持 mimic 关节
+// 5. 可配置命令传播禁用、位置跟随偏移等参数
+
 #include "mock_components/generic_system.hpp"
 
 #include <algorithm>
@@ -31,6 +40,9 @@
 namespace mock_components
 {
 
+// 初始化模拟系统：解析各种模拟参数
+// 包括：mock_sensor_commands、mock_gpio_commands、disable_commands、
+// calculate_dynamics、position_state_following_offset 等
 CallbackReturn GenericSystem::on_init(
   const hardware_interface::HardwareComponentInterfaceParams & params)
 {
@@ -328,6 +340,10 @@ hardware_interface::CallbackReturn GenericSystem::on_configure(
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
+// 读取操作（模拟硬件的核心逻辑）：
+// 根据配置，将命令值镜像到状态值
+// 如果启用动力学计算，会根据控制模式（位置/速度/加速度）进行积分运算
+// 如果禁用命令传播，则直接返回而不更新状态
 return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
   if (command_propagation_disabled_)

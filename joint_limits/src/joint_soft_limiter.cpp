@@ -13,6 +13,11 @@
 // limitations under the License.
 
 /// \author Adrià Roig Moreno
+
+// 关节软限位器（JointSoftLimiter）实现文件
+// 本文件实现了基于软限位的关节限位器。
+// 主要功能：在硬限位基础上，使用软限位边界实现更平滑的限位效果，避免突然的命令截断。
+
 #ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES
 #endif

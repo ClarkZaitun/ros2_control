@@ -14,6 +14,9 @@
 
 /// \author Adolfo Rodriguez Tsouroukdissian
 
+// 四连杆传动（FourBarLinkageTransmission）头文件
+// 实现了四连杆机构传动，将两个执行器映射到两个关节
+
 #ifndef TRANSMISSION_INTERFACE__FOUR_BAR_LINKAGE_TRANSMISSION_HPP_
 #define TRANSMISSION_INTERFACE__FOUR_BAR_LINKAGE_TRANSMISSION_HPP_
 

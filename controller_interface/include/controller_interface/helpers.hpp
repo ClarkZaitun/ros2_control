@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 控制器接口辅助函数头文件
+// 提供控制器接口中使用的辅助函数
+
 #ifndef CONTROLLER_INTERFACE__HELPERS_HPP_
 #define CONTROLLER_INTERFACE__HELPERS_HPP_
 

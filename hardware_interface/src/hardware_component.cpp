@@ -12,6 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 硬件组件（HardwareComponent）实现文件
+// 本文件实现了硬件组件的生命周期管理，包括初始化、配置、激活、停用、清理、关闭和错误恢复等状态转换。
+// HardwareComponent 是对 HardwareComponentInterface 的包装类，采用 Pimpl 模式，
+// 将实际的硬件接口实现委托给 impl_ 对象，同时提供互斥锁保护和统计信息收集功能。
+
 #include "hardware_interface/hardware_component.hpp"
 
 #include <memory>
@@ -31,13 +36,17 @@
 
 namespace hardware_interface
 {
+
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
+// 构造函数：接收一个硬件组件接口的唯一指针，通过移动语义存储到 impl_ 中
 HardwareComponent::HardwareComponent(std::unique_ptr<HardwareComponentInterface> impl)
 : impl_(std::move(impl))
 {
 }
 
+// 移动构造函数：从另一个 HardwareComponent 对象移动资源
+// 注意：需要锁定源对象的互斥锁以确保线程安全
 HardwareComponent::HardwareComponent(HardwareComponent && other) noexcept
 {
   std::lock_guard<std::recursive_mutex> lock(other.component_mutex_);
@@ -46,6 +55,8 @@ HardwareComponent::HardwareComponent(HardwareComponent && other) noexcept
   last_write_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
 }
 
+// 初始化硬件组件：只有在 UNKNOWN 状态下才能初始化
+// 成功时转为 UNCONFIGURED 状态，失败时转为 FINALIZED 状态
 const rclcpp_lifecycle::State & HardwareComponent::initialize(
   const hardware_interface::HardwareComponentParams & params)
 {
@@ -71,6 +82,8 @@ const rclcpp_lifecycle::State & HardwareComponent::initialize(
   return impl_->get_lifecycle_state();
 }
 
+// 配置硬件组件：将组件从 UNCONFIGURED 状态转换到 INACTIVE 状态
+// 配置前会暂停异步操作，配置成功后进入 INACTIVE 状态
 const rclcpp_lifecycle::State & HardwareComponent::configure()
 {
   std::unique_lock<std::recursive_mutex> lock(component_mutex_);
@@ -98,6 +111,8 @@ const rclcpp_lifecycle::State & HardwareComponent::configure()
   return impl_->get_lifecycle_state();
 }
 
+// 清理硬件组件：将组件从 INACTIVE 状态转换回 UNCONFIGURED 状态
+// 清理时会禁用内省（introspection），并暂停异步操作
 const rclcpp_lifecycle::State & HardwareComponent::cleanup()
 {
   std::unique_lock<std::recursive_mutex> lock(component_mutex_);
@@ -122,6 +137,7 @@ const rclcpp_lifecycle::State & HardwareComponent::cleanup()
   return impl_->get_lifecycle_state();
 }
 
+// 关闭硬件组件：将组件从任意非 UNKNOWN/FINALIZED 状态转换到 FINALIZED 状态
 const rclcpp_lifecycle::State & HardwareComponent::shutdown()
 {
   std::unique_lock<std::recursive_mutex> lock(component_mutex_);
@@ -147,6 +163,8 @@ const rclcpp_lifecycle::State & HardwareComponent::shutdown()
   return impl_->get_lifecycle_state();
 }
 
+// 激活硬件组件：将组件从 INACTIVE 状态转换到 ACTIVE 状态
+// 激活时会重置读写统计信息，准备激活，并启用内省
 const rclcpp_lifecycle::State & HardwareComponent::activate()
 {
   std::unique_lock<std::recursive_mutex> lock(component_mutex_);
@@ -182,6 +200,7 @@ const rclcpp_lifecycle::State & HardwareComponent::activate()
   return impl_->get_lifecycle_state();
 }
 
+// 停用硬件组件：将组件从 ACTIVE 状态转换回 INACTIVE 状态
 const rclcpp_lifecycle::State & HardwareComponent::deactivate()
 {
   std::unique_lock<std::recursive_mutex> lock(component_mutex_);
@@ -209,6 +228,8 @@ const rclcpp_lifecycle::State & HardwareComponent::deactivate()
   return impl_->get_lifecycle_state();
 }
 
+// 错误处理：尝试从错误状态恢复
+// 成功时回到 UNCONFIGURED 状态，失败时进入 FINALIZED 状态
 const rclcpp_lifecycle::State & HardwareComponent::error()
 {
   std::unique_lock<std::recursive_mutex> lock(component_mutex_);
@@ -237,6 +258,8 @@ const rclcpp_lifecycle::State & HardwareComponent::error()
   return impl_->get_lifecycle_state();
 }
 
+// 导出状态接口：提供只读的硬件状态数据给控制器使用
+// 兼容旧的 export_state_interfaces() 和新的 on_export_state_interfaces() 两种方式
 std::vector<StateInterface::ConstSharedPtr> HardwareComponent::export_state_interfaces()
 {
 // BEGIN (Handle export change): for backward compatibility, can be removed if
@@ -268,6 +291,8 @@ std::vector<StateInterface::ConstSharedPtr> HardwareComponent::export_state_inte
   // END: for backward compatibility
 }
 
+// 导出命令接口：提供可写的硬件命令数据给控制器使用
+// 兼容旧的 export_command_interfaces() 和新的 on_export_command_interfaces() 两种方式
 std::vector<CommandInterface::SharedPtr> HardwareComponent::export_command_interfaces()
 {
 // BEGIN (Handle export change): for backward compatibility, can be removed if
@@ -340,6 +365,9 @@ const HardwareComponentStatisticsCollector & HardwareComponent::get_write_statis
   return write_statistics_;
 }
 
+// 读取硬件状态：在 INACTIVE 或 ACTIVE 状态下触发硬件读取操作
+// 如果读取返回错误，则自动转入错误处理状态
+// 同时收集执行时间和周期性统计信息
 return_type HardwareComponent::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   if (lifecycleStateThatRequiresNoAction(impl_->get_lifecycle_id()))
@@ -375,6 +403,9 @@ return_type HardwareComponent::read(const rclcpp::Time & time, const rclcpp::Dur
   return return_type::OK;
 }
 
+// 写入硬件命令：仅在 ACTIVE 状态下触发硬件写入操作
+// 传感器类型不需要写入操作，直接返回 OK
+// 如果写入返回错误，则自动转入错误处理状态
 return_type HardwareComponent::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   if (impl_->get_hardware_info().type == "sensor")
@@ -414,5 +445,6 @@ return_type HardwareComponent::write(const rclcpp::Time & time, const rclcpp::Du
   return return_type::OK;
 }
 
+// 获取组件互斥锁的引用，供外部进行线程同步
 std::recursive_mutex & HardwareComponent::get_mutex() { return component_mutex_; }
 }  // namespace hardware_interface

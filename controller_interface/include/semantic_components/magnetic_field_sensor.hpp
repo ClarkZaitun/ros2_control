@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 磁场传感器语义组件头文件
+// 提供磁场传感器的语义化接口
+
 #ifndef SEMANTIC_COMPONENTS__MAGNETIC_FIELD_SENSOR_HPP_
 #define SEMANTIC_COMPONENTS__MAGNETIC_FIELD_SENSOR_HPP_
 

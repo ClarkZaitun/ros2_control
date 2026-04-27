@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 四连杆传动加载器实现文件
+// 实现了从 URDF 加载四连杆传动（FourBarLinkageTransmission）配置并创建传动实例
+
 #include "transmission_interface/four_bar_linkage_transmission_loader.hpp"
 
 #include <memory>

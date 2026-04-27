@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 控制器接口（ControllerInterface）头文件
+// 定义了标准控制器接口类，是 ros2_control 中所有控制器的基类
+// 提供控制器与硬件命令/状态接口交互的标准框架
+
 #ifndef CONTROLLER_INTERFACE__CONTROLLER_INTERFACE_HPP_
 #define CONTROLLER_INTERFACE__CONTROLLER_INTERFACE_HPP_
 

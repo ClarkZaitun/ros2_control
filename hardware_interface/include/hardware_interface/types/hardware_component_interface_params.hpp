@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 硬件组件接口参数定义
+// 定义了 HardwareComponentInterfaceParams 结构体
+
 #ifndef HARDWARE_INTERFACE__TYPES__HARDWARE_COMPONENT_INTERFACE_PARAMS_HPP_
 #define HARDWARE_INTERFACE__TYPES__HARDWARE_COMPONENT_INTERFACE_PARAMS_HPP_
 

@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 控制器接口测试工具头文件
+// 提供控制器测试中使用的辅助函数和宏
+
 #ifndef CONTROLLER_INTERFACE__TEST_UTILS_HPP_
 #define CONTROLLER_INTERFACE__TEST_UTILS_HPP_
 

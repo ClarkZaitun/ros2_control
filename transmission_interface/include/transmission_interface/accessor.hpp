@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 传动数据访问器头文件
+// 提供对传动接口数据的访问辅助功能
+
 #ifndef TRANSMISSION_INTERFACE__ACCESSOR_HPP_
 #define TRANSMISSION_INTERFACE__ACCESSOR_HPP_
 

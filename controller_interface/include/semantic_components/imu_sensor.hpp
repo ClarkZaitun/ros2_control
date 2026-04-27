@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// IMU传感器语义组件头文件
+// 提供IMU传感器的语义化接口，封装加速度、角速度和姿态数据的状态访问
+
 #ifndef SEMANTIC_COMPONENTS__IMU_SENSOR_HPP_
 #define SEMANTIC_COMPONENTS__IMU_SENSOR_HPP_
 

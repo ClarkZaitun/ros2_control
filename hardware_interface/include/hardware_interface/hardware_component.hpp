@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 硬件组件（HardwareComponent）头文件
+// 定义了硬件组件包装类，提供生命周期管理和读写操作的接口
+// 是对 HardwareComponentInterface 的外观模式封装
+
 #ifndef HARDWARE_INTERFACE__HARDWARE_COMPONENT_HPP_
 #define HARDWARE_INTERFACE__HARDWARE_COMPONENT_HPP_
 

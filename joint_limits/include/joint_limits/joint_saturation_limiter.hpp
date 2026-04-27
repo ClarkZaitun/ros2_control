@@ -14,6 +14,10 @@
 
 /// \author Dr. Denis Stogl
 
+// 关节饱和限位器头文件
+// 定义了基于硬限位的关节饱和限位器
+// 强制执行位置、速度、加速度和力矩的限位约束
+
 #ifndef JOINT_LIMITS__JOINT_SATURATION_LIMITER_HPP_
 #define JOINT_LIMITS__JOINT_SATURATION_LIMITER_HPP_
 

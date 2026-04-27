@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 可链式控制器接口（ChainableControllerInterface）头文件
+// 定义了可链式调用的控制器接口，允许控制器导出状态和参考接口
+// 支持控制器之间的数据传递和级联控制
+
 #ifndef CONTROLLER_INTERFACE__CHAINABLE_CONTROLLER_INTERFACE_HPP_
 #define CONTROLLER_INTERFACE__CHAINABLE_CONTROLLER_INTERFACE_HPP_
 

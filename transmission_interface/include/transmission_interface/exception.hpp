@@ -11,6 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+// 传动异常头文件
+// 定义了传动系统中使用的异常类
+
 #ifndef TRANSMISSION_INTERFACE__EXCEPTION_HPP_
 #define TRANSMISSION_INTERFACE__EXCEPTION_HPP_
 

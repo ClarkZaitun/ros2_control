@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// LED RGB设备语义组件头文件
+// 提供RGB LED设备的语义化命令和状态接口
+
 #ifndef SEMANTIC_COMPONENTS__LED_RGB_DEVICE_HPP_
 #define SEMANTIC_COMPONENTS__LED_RGB_DEVICE_HPP_
 

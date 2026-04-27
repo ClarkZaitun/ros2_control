@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 控制器接口（ControllerInterface）实现文件
+// 本文件实现了标准控制器接口，是 ros2_control 中控制器的基类。
+// 主要功能：提供控制器与硬件接口交互的标准框架，默认不可链式调用。
+
 #include "controller_interface/controller_interface.hpp"
 
 #include <vector>

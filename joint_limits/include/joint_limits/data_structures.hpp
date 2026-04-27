@@ -14,6 +14,10 @@
 
 /// \author Sai Kishor Kothakota
 
+// 关节限位数据结构头文件
+// 定义了关节限位系统中使用的核心数据结构
+// 包括 JointControlInterfacesData、JointInterfacesCommandLimiterData 等
+
 #ifndef JOINT_LIMITS__DATA_STRUCTURES_HPP_
 #define JOINT_LIMITS__DATA_STRUCTURES_HPP_
 

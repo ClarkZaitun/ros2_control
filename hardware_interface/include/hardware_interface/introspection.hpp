@@ -14,6 +14,9 @@
 
 /// \author Sai Kishor Kothakota
 
+// 内省（Introspection）头文件
+// 提供硬件接口的内省功能，用于运行时监控和调试
+
 #ifndef HARDWARE_INTERFACE__INTROSPECTION_HPP_
 #define HARDWARE_INTERFACE__INTROSPECTION_HPP_
 

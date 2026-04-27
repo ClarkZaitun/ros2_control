@@ -14,6 +14,9 @@
 
 /// \author Adolfo Rodriguez Tsouroukdissian
 
+// 关节限位URDF头文件
+// 提供从URDF模型中提取关节限位和软限位的函数
+
 #ifndef JOINT_LIMITS__JOINT_LIMITS_URDF_HPP_
 #define JOINT_LIMITS__JOINT_LIMITS_URDF_HPP_
 

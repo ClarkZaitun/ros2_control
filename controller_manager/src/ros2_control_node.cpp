@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// ros2_control 节点主入口
+// 本文件实现了 ros2_control 的主节点，创建并运行控制器管理器。
+// 主要功能：初始化 ROS2 节点、创建控制器管理器实例、配置实时执行器、运行控制循环。
+
 #include <errno.h>
 #include <chrono>
 #include <memory>

@@ -14,6 +14,10 @@
 
 /// \authors Nathan Brooks, Dr. Denis Stogl, Guillaume Walck
 
+// 关节饱和限位器（JointSaturationLimiter）实现文件
+// 本文件实现了基于硬限位的关节饱和限位器。
+// 主要功能：强制执行关节的位置、速度、加速度和力矩限位，确保命令值在安全范围内。
+
 #include "joint_limits/joint_saturation_limiter.hpp"
 
 #include <algorithm>

@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// TF前缀处理头文件
+// 提供控制器中TF坐标变换前缀的处理功能
+
 #ifndef CONTROLLER_INTERFACE__TF_PREFIX_HPP_
 #define CONTROLLER_INTERFACE__TF_PREFIX_HPP_
 

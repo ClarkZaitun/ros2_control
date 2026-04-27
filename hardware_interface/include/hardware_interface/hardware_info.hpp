@@ -12,6 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 硬件信息（HardwareInfo）头文件
+// 定义了描述硬件组件配置的数据结构，包括：
+// HardwareInfo - 硬件组件完整配置信息
+// ComponentInfo - 子组件（关节、传感器、GPIO）信息
+// InterfaceInfo - 接口（命令/状态）描述信息
+// TransmissionInfo/JointInfo/ActuatorInfo - 传动相关信息
+// MimicJoint - 模仿关节配置
+
 #ifndef HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
 #define HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
 

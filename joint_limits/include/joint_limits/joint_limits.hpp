@@ -14,6 +14,10 @@
 
 /// \author Adolfo Rodriguez Tsouroukdissian
 
+// 关节限位（JointLimits）头文件
+// 定义了 JointLimits 和 SoftJointLimits 数据结构
+// 包含位置、速度、加速度、力矩等限位参数及其启用标志
+
 #ifndef JOINT_LIMITS__JOINT_LIMITS_HPP_
 #define JOINT_LIMITS__JOINT_LIMITS_HPP_
 

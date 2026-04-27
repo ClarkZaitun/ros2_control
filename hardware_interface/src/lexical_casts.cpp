@@ -12,6 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 词法转换工具实现文件
+// 提供与区域设置无关的字符串到数值的转换函数
+// 包括：stod（字符串转double）、stof（字符串转float）、to_lower_case、parse_bool、parse_array 等
+// 这些函数避免了标准库 stod/stof 受本地化设置影响的问题
+
 #include <algorithm>
 #include <cctype>
 #include <charconv>
@@ -29,6 +34,7 @@ namespace hardware_interface
 {
 namespace impl
 {
+// 使用 std::from_chars 解析浮点数（C++17+），不受区域设置影响
 template <typename FloatingPointType>
 std::optional<FloatingPointType> parse_floating_point_with_from_chars(const std::string & s)
 {
@@ -62,6 +68,7 @@ std::optional<FloatingPointType> parse_floating_point_with_from_chars(const std:
   return std::nullopt;
 }
 
+// 字符串转 double（可选返回版本），内部使用不含区域设置的转换
 std::optional<double> stod(const std::string & s)
 {
 #if __cplusplus < 202002L
@@ -82,6 +89,7 @@ std::optional<double> stod(const std::string & s)
 #endif
 }
 
+// 字符串转 float（可选返回版本）
 std::optional<float> stof(const std::string & s)
 {
 #if __cplusplus < 202002L
@@ -104,6 +112,7 @@ std::optional<float> stof(const std::string & s)
 
 }  // namespace impl
 
+// 字符串转 double（抛出异常版本）：转换失败时抛出 std::invalid_argument
 double stod(const std::string & s)
 {
   if (const auto result = impl::stod(s))
@@ -113,6 +122,7 @@ double stod(const std::string & s)
   throw std::invalid_argument("Failed converting string to real number");
 }
 
+// 字符串转 float（抛出异常版本）：转换失败时抛出 std::invalid_argument
 float stof(const std::string & s)
 {
   if (const auto result = impl::stof(s))
@@ -122,6 +132,7 @@ float stof(const std::string & s)
   throw std::invalid_argument("Failed converting string to float number");
 }
 
+// 将字符串转换为小写
 std::string to_lower_case(const std::string & string)
 {
   std::string lower_case_string = string;
@@ -131,6 +142,7 @@ std::string to_lower_case(const std::string & string)
   return lower_case_string;
 }
 
+// 解析布尔字符串：接受 "true" 或 "false"（不区分大小写）
 bool parse_bool(const std::string & bool_string)
 {
   // Copy input to temp and make lowercase
@@ -150,6 +162,7 @@ bool parse_bool(const std::string & bool_string)
     "' is not a valid boolean value. Expected 'true' or 'false'.");
 }
 
+// 解析字符串数组
 std::vector<std::string> parse_string_array(const std::string & string_array_string)
 {
   return parse_array<std::string>(string_array_string);

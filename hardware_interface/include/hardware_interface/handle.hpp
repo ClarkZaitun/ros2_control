@@ -12,6 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 硬件接口句柄（Handle）头文件
+// 定义了状态接口（StateInterface）和命令接口（CommandInterface）的底层句柄类
+// 提供对硬件数据的命名访问，支持多种数据类型（double、bool等）
+// 是 ros2_control 框架中控制器与硬件之间数据交换的基础
+
 #ifndef HARDWARE_INTERFACE__HANDLE_HPP_
 #define HARDWARE_INTERFACE__HANDLE_HPP_
 

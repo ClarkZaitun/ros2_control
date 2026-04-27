@@ -12,6 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 资源管理器（ResourceManager）实现文件
+// 这是 ros2_control 框架的核心组件之一，负责管理所有硬件资源
+// 主要功能：
+// 1. 从 URDF 加载和初始化硬件组件（执行器、传感器、系统）
+// 2. 管理状态接口和命令接口的存储、导出和可用性
+// 3. 管理命令接口的声明（claimed）状态
+// 4. 管理硬件组件的生命周期状态转换
+// 5. 协调控制器与硬件之间的接口映射
+// 6. 执行关节限位检查
+// 7. 支持控制器链式调用（chaining）的接口导入导出
+// 8. 线程安全：使用多种互斥锁保护不同资源
+
 #include "hardware_interface/resource_manager.hpp"
 
 #include <fmt/compile.h>
@@ -45,6 +57,8 @@
 
 namespace hardware_interface
 {
+// 辅助 lambda：执行硬件状态转换并打印日志
+// 调用传入的 transition 函数，检查结果是否达到目标状态
 auto trigger_and_print_hardware_state_transition =
   [](
     auto transition, const std::string transition_name, const std::string & hardware_name,
@@ -122,6 +136,8 @@ void find_common_hardware_interfaces(
   }
 }
 
+// 资源存储类：ResourceManager 的内部实现类
+// 负责实际存储和管理所有硬件组件、接口映射、限位器等数据
 class ResourceStorage
 {
   static constexpr const char * pkg_name = "hardware_interface";
@@ -172,6 +188,9 @@ public:
     handle_exception_ = rm_param.handle_exceptions;
   }
 
+  // 通过 pluginlib 加载硬件插件
+  // HardwareT: 硬件组件类型（Actuator/Sensor/System）
+  // HardwareInterfaceT: 硬件接口类型（ActuatorInterface/SensorInterface/SystemInterface）
   template <class HardwareT, class HardwareInterfaceT>
   [[nodiscard]] bool load_hardware(
     const HardwareInfo & hardware_info, pluginlib::ClassLoader<HardwareInterfaceT> & loader,
@@ -244,6 +263,7 @@ public:
     return is_loaded;
   }
 
+  // 初始化硬件组件：调用 hardware.initialize() 并检查状态转换是否成功
   template <class HardwareT>
   bool initialize_hardware(
     const hardware_interface::HardwareComponentParams & params, HardwareT & hardware)
@@ -296,6 +316,7 @@ public:
     return result;
   }
 
+  // 配置硬件组件：执行 configure 状态转换，成功后将接口添加到可用列表
   template <class HardwareT>
   bool configure_hardware(HardwareT & hardware)
   {
@@ -574,6 +595,8 @@ public:
     return result;
   }
 
+  // 设置组件状态：根据当前状态和目标状态执行相应的生命周期转换
+  // 支持从任意状态转换到目标状态的完整路径
   template <class HardwareT>
   bool set_component_state(HardwareT & hardware, const rclcpp_lifecycle::State & target_state)
   {
@@ -677,6 +700,7 @@ public:
     return result;
   }
 
+  // 导入状态接口：从硬件组件导出状态接口并添加到内部存储
   template <class HardwareT>
   void import_state_interfaces(HardwareT & hardware)
   {
@@ -728,6 +752,7 @@ public:
   }
   // END: for backward compatibility
 
+  // 导入命令接口：从硬件组件导出命令接口并添加到内部存储
   template <class HardwareT>
   void import_command_interfaces(HardwareT & hardware)
   {
@@ -759,6 +784,8 @@ public:
     }
   }
 
+  // 导入关节限位器：根据硬件信息创建关节限位接口
+  // 如果存在软限位则使用 JointSoftLimiter，否则使用 JointSaturationLimiter
   void import_joint_limiters(const std::vector<HardwareInfo> & hardware_infos)
   {
     const auto are_joint_limits_enabled =
@@ -900,14 +927,12 @@ public:
     data.limited = data.command;
   }
 
-  /// enforce the command limits for a specific joint
-  /**
-   * @param joint_name name of the joint to enforce the command limits
-   * @param period time period of the command
-   * @return true if the command interfaces are out of limits and the limits are enforced
-   * @return false if the command interfaces values are within limits
-   * \throws std::runtime_error if the actual position is out of bounds if commanding position
-   */
+  /// 执行指定关节的命令限位强制检查
+  /// @param joint_name 关节名称
+  /// @param period 命令周期
+  /// @return true 如果命令超出限位并被强制限位
+  /// @return false 如果命令在限位范围内
+  /// \throws std::runtime_error 如果实际位置越界
   bool enforce_command_limits(const std::string & joint_name, const rclcpp::Duration & period)
   {
     bool enforce_result = false;
@@ -1049,6 +1074,8 @@ public:
    *
    * \param[interface] command interface to bind the enforcement.
    */
+  // 将命令限位器绑定到命令接口
+  // 当控制器设置命令值时，自动调用限位器进行检查和限制
   void bind_command_limiter_to_interface(CommandInterface::SharedPtr interface)
   {
     if (interface)
@@ -1419,6 +1446,7 @@ public:
   unsigned int cm_update_rate_ = 100;
 };
 
+// ResourceManager 构造函数：仅创建资源存储，不加载硬件
 ResourceManager::ResourceManager(
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface)
@@ -1488,6 +1516,7 @@ ResourceManager::ResourceManager(
   }
 }
 
+// 关闭所有硬件组件
 bool ResourceManager::shutdown_components()
 {
   std::unique_lock<std::recursive_mutex> guard(resource_interfaces_lock_);
@@ -1505,6 +1534,9 @@ bool ResourceManager::shutdown_components()
 }
 
 // CM API: Called in "callback/slow"-thread
+// 加载并初始化所有硬件组件
+// 从 URDF 解析硬件信息，根据类型分别加载执行器、传感器和系统组件
+// 加载成功后验证存储的接口是否与 URDF 描述一致
 bool ResourceManager::load_and_initialize_components(
   const hardware_interface::ResourceManagerParams & params)
 {
@@ -1600,6 +1632,7 @@ bool ResourceManager::load_and_initialize_components(
   return components_are_loaded_and_initialized_;
 }
 
+// 从 URDF 导入关节限位器
 void ResourceManager::import_joint_limiters(const std::string & urdf)
 {
   std::lock_guard<std::recursive_mutex> guard(joint_limiters_lock_);
@@ -1613,6 +1646,7 @@ bool ResourceManager::are_components_initialized() const
 }
 
 // CM API: Called in "update"-thread
+// 声明状态接口：控制器通过此方法获取只读的状态接口
 LoanedStateInterface ResourceManager::claim_state_interface(const std::string & key)
 {
   if (!state_interface_is_available(key))
@@ -1667,6 +1701,7 @@ std::string ResourceManager::get_state_interface_data_type(const std::string & n
 }
 
 // CM API: Called in "callback/slow"-thread
+// 导入控制器导出的状态接口（用于控制器链式调用）
 void ResourceManager::import_controller_exported_state_interfaces(
   const std::string & controller_name, std::vector<StateInterface::ConstSharedPtr> & interfaces)
 {
@@ -1683,6 +1718,7 @@ std::vector<std::string> ResourceManager::get_controller_exported_state_interfac
 }
 
 // CM API: Called in "update"-thread
+// 将控制器导出的状态接口标记为可用（在控制器激活时调用）
 void ResourceManager::make_controller_exported_state_interfaces_available(
   const std::string & controller_name)
 {
@@ -1693,6 +1729,7 @@ void ResourceManager::make_controller_exported_state_interfaces_available(
 }
 
 // CM API: Called in "update"-thread
+// 将控制器导出的状态接口标记为不可用（在控制器停用时调用）
 void ResourceManager::make_controller_exported_state_interfaces_unavailable(
   const std::string & controller_name)
 {
@@ -1715,6 +1752,7 @@ void ResourceManager::make_controller_exported_state_interfaces_unavailable(
 }
 
 // CM API: Called in "callback/slow"-thread
+// 移除控制器导出的状态接口（在控制器卸载时调用）
 void ResourceManager::remove_controller_exported_state_interfaces(
   const std::string & controller_name)
 {
@@ -1733,6 +1771,7 @@ void ResourceManager::remove_controller_exported_state_interfaces(
 }
 
 // CM API: Called in "callback/slow"-thread
+// 导入控制器参考接口（用于控制器链式调用中的命令传递）
 void ResourceManager::import_controller_reference_interfaces(
   const std::string & controller_name,
   const std::vector<hardware_interface::CommandInterface::SharedPtr> & interfaces)
@@ -1750,6 +1789,7 @@ std::vector<std::string> ResourceManager::get_controller_reference_interface_nam
 }
 
 // CM API: Called in "update"-thread
+// 将控制器参考接口标记为可用
 void ResourceManager::make_controller_reference_interfaces_available(
   const std::string & controller_name)
 {
@@ -1760,6 +1800,7 @@ void ResourceManager::make_controller_reference_interfaces_available(
 }
 
 // CM API: Called in "update"-thread
+// 将控制器参考接口标记为不可用
 void ResourceManager::make_controller_reference_interfaces_unavailable(
   const std::string & controller_name)
 {
@@ -1799,6 +1840,7 @@ void ResourceManager::remove_controller_reference_interfaces(const std::string &
 }
 
 // CM API: Called in "callback/slow"-thread
+// 缓存控制器到硬件的映射关系：记录哪些控制器使用了哪些硬件组件
 void ResourceManager::cache_controller_to_hardware(
   const std::string & controller_name, const std::vector<std::string> & interfaces)
 {
@@ -1858,6 +1900,8 @@ bool ResourceManager::command_interface_is_claimed(const std::string & key) cons
 }
 
 // CM API: Called in "update"-thread
+// 声明命令接口：控制器通过此方法获取可写的命令接口
+// 每个命令接口同一时间只能被一个控制器声明（claimed）
 LoanedCommandInterface ResourceManager::claim_command_interface(const std::string & key)
 {
   if (!command_interface_is_available(key))
@@ -1928,6 +1972,7 @@ std::string ResourceManager::get_command_interface_data_type(const std::string &
   }
 }
 
+// 导入外部创建的执行器组件（不通过 pluginlib 加载）
 void ResourceManager::import_component(
   std::unique_ptr<ActuatorInterface> actuator, const HardwareComponentParams & params)
 {
@@ -1938,6 +1983,7 @@ void ResourceManager::import_component(
     resource_storage_->systems_.size());
 }
 
+// 导入外部创建的传感器组件（不通过 pluginlib 加载）
 void ResourceManager::import_component(
   std::unique_ptr<SensorInterface> sensor, const HardwareComponentParams & params)
 {
@@ -1948,6 +1994,7 @@ void ResourceManager::import_component(
     resource_storage_->systems_.size());
 }
 
+// 导入外部创建的系统组件（不通过 pluginlib 加载）
 void ResourceManager::import_component(
   std::unique_ptr<SystemInterface> system, const HardwareComponentParams & params)
 {
@@ -1959,6 +2006,7 @@ void ResourceManager::import_component(
 }
 
 // CM API: Called in "callback/slow"-thread
+// 获取所有硬件组件的状态信息
 const std::unordered_map<std::string, HardwareComponentInfo> &
 ResourceManager::get_components_status()
 {
@@ -1991,6 +2039,8 @@ ResourceManager::get_soft_joint_limits() const
 }
 
 // CM API: Called in "callback/slow"-thread
+// 准备命令模式切换：在控制器激活/停用前调用
+// 通知硬件组件即将启用的和停用的命令接口列表
 bool ResourceManager::prepare_command_mode_switch(
   const std::vector<std::string> & start_interfaces,
   const std::vector<std::string> & stop_interfaces)
@@ -2148,6 +2198,8 @@ bool ResourceManager::prepare_command_mode_switch(
 }
 
 // CM API: Called in "update"-thread
+// 执行命令模式切换：实际执行命令接口的切换操作
+// 切换成功后重置关节限位器的内部状态
 bool ResourceManager::perform_command_mode_switch(
   const std::vector<std::string> & start_interfaces,
   const std::vector<std::string> & stop_interfaces)
@@ -2269,6 +2321,8 @@ bool ResourceManager::perform_command_mode_switch(
 }
 
 // CM API: Called in "callback/slow"-thread
+// 设置指定硬件组件的生命周期状态
+// 在执行器、传感器和系统容器中查找目标组件并执行状态转换
 return_type ResourceManager::set_component_state(
   const std::string & component_name, rclcpp_lifecycle::State & target_state)
 {
@@ -2354,6 +2408,8 @@ return_type ResourceManager::set_component_state(
 }
 
 // CM API: Called in "update"-thread
+// 强制执行所有关节的命令限位检查
+// 使用 try_to_lock 避免阻塞实时控制循环
 bool ResourceManager::enforce_command_limits(const rclcpp::Duration & period)
 {
   std::unique_lock<std::recursive_mutex> limiters_guard(joint_limiters_lock_, std::try_to_lock);
@@ -2375,6 +2431,9 @@ bool ResourceManager::enforce_command_limits(const rclcpp::Duration & period)
 }
 
 // CM API: Called in "update"-thread
+// 读取所有硬件组件的状态（在控制循环的更新线程中调用）
+// 处理不同读写速率的组件，并收集统计信息
+// 如果读取返回错误，则将组件转入错误状态并移除其可用接口
 HardwareReadWriteStatus ResourceManager::read(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
@@ -2476,6 +2535,9 @@ HardwareReadWriteStatus ResourceManager::read(
 }
 
 // CM API: Called in "update"-thread
+// 写入所有硬件组件的命令（在控制循环的更新线程中调用）
+// 仅写入执行器和系统类型（传感器不需要写入）
+// 如果写入返回 DEACTIVATE，则将组件停用
 HardwareReadWriteStatus ResourceManager::write(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
@@ -2649,6 +2711,8 @@ hardware_interface::ResourceManagerParams ResourceManager::constructParams(
   return params;
 }
 
+// 验证存储：检查 URDF 中声明的所有接口是否都已成功导出
+// 如果有缺失的接口，则返回 false
 bool ResourceManager::validate_storage(
   const std::vector<hardware_interface::HardwareInfo> & hardware_info) const
 {

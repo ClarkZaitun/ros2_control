@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 控制器接口基类（ControllerInterfaceBase）实现文件
+// 本文件实现了控制器接口的基类，提供控制器生命周期管理和命令/状态接口的声明机制。
+// 主要功能：控制器初始化、声明和获取命令/状态接口、生命周期状态管理。
+
 #include "controller_interface/controller_interface_base.hpp"
 
 #include <memory>

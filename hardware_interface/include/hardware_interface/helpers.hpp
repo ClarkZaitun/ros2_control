@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 辅助工具（Helpers）头文件
+// 提供通用的辅助函数，如字符串处理、容器操作等
+
 #ifndef HARDWARE_INTERFACE__HELPERS_HPP_
 #define HARDWARE_INTERFACE__HELPERS_HPP_
 

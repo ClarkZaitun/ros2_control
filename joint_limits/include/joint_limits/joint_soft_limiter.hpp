@@ -14,6 +14,10 @@
 
 /// \author Adrià Roig Moreno
 
+// 关节软限位器头文件
+// 定义了基于软限位的关节限位器
+// 在硬限位基础上使用软限位边界实现平滑限位
+
 #ifndef JOINT_LIMITS__JOINT_SOFT_LIMITER_HPP_
 #define JOINT_LIMITS__JOINT_SOFT_LIMITER_HPP_
 

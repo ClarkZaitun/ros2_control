@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 组件解析器（ComponentParser）头文件
+// 提供从 URDF/SDF xml 中解析 ros2_control 配置的函数
+// 核心函数 parse_control_resources_from_urdf 解析硬件组件描述
+
 #ifndef HARDWARE_INTERFACE__COMPONENT_PARSER_HPP_
 #define HARDWARE_INTERFACE__COMPONENT_PARSER_HPP_
 

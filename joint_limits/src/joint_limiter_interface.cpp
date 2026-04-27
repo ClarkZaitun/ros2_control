@@ -14,6 +14,10 @@
 
 /// \author Dr. Denis Stogl
 
+// 关节限位器接口（JointLimiterInterface）实现文件
+// 本文件实现了关节限位器的基类接口，定义了限位器的初始化和执行限位强制执行的框架。
+// 所有具体的限位器实现（饱和限位、软限位等）都继承此接口。
+
 #include "joint_limits/joint_limiter_interface.hpp"
 
 namespace joint_limits
