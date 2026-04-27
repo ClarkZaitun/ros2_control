@@ -537,6 +537,8 @@ rclcpp::NodeOptions get_cm_node_options()
   return node_options;
 }
 
+// 控制器管理器委托构造函数
+// 不带URDF参数的简化版本，委托给完整构造函数
 ControllerManager::ControllerManager(
   std::shared_ptr<rclcpp::Executor> executor, const std::string & manager_node_name,
   const std::string & node_namespace, const rclcpp::NodeOptions & options)
@@ -544,6 +546,13 @@ ControllerManager::ControllerManager(
 {
 }
 
+// 控制器管理器构造函数
+// 初始化控制器管理器的所有核心组件：
+// 1. 初始化参数声明和ROS节点选项
+// 2. 创建资源管理器（ResourceManager）
+// 3. 初始化控制器加载器（pluginlib）
+// 4. 设置控制器链式调用拓扑
+// 5. 注册ROS服务和订阅
 ControllerManager::ControllerManager(
   std::shared_ptr<rclcpp::Executor> executor, const std::string & urdf,
   bool activate_all_hw_components, const std::string & manager_node_name,
@@ -609,6 +618,8 @@ ControllerManager::~ControllerManager()
   }
 }
 
+// 关闭所有已激活的控制器
+// 在控制器管理器关闭时调用，按逆序停用所有活跃控制器
 bool ControllerManager::shutdown_controllers()
 {
   RCLCPP_INFO(get_logger(), "Shutting down all controllers in the controller manager.");
@@ -640,6 +651,8 @@ bool ControllerManager::shutdown_controllers()
   return ctrls_shutdown_status;
 }
 
+// 初始化控制器管理器的核心组件
+// 包括：加载控制器库、初始化资源管理器、注册服务等
 void ControllerManager::init_controller_manager()
 {
   controller_manager_activity_publisher_ =
@@ -767,6 +780,9 @@ void ControllerManager::initialize_parameters()
   }
 }
 
+// 机器人描述回调函数
+// 当收到新的URDF机器人描述时触发，重新初始化资源管理器
+// 这是动态加载硬件配置的核心入口
 void ControllerManager::robot_description_callback(const std_msgs::msg::String & robot_description)
 {
   RCLCPP_INFO(get_logger(), "Received robot description from topic.");
@@ -1097,6 +1113,9 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   }
 }
 
+// 注册所有ROS服务
+// 包括：加载/卸载/配置/激活/停用控制器、切换控制器、
+// 列出控制器类型/硬件组件/硬件接口等服务
 void ControllerManager::init_services()
 {
   // TODO(anyone): Due to issues with the MultiThreadedExecutor, this control loop does not rely on
@@ -1495,6 +1514,9 @@ controller_interface::return_type ControllerManager::cleanup_controller(
   return result;
 }
 
+// 关停单个控制器
+// 根据控制器当前状态执行适当的状态转换
+// 活跃→停用→清理→关停，非活跃→清理→关停
 void ControllerManager::shutdown_controller(
   const controller_manager::ControllerSpec & controller) const
 {
@@ -1771,6 +1793,8 @@ controller_interface::return_type ControllerManager::configure_controller(
   return controller_interface::return_type::OK;
 }
 
+// 清除所有待处理的控制器切换请求
+// 在切换操作完成后调用，清空激活/停用请求列表
 void ControllerManager::clear_requests()
 {
   switch_params_.do_switch = false;
@@ -2468,6 +2492,8 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
   return to.back().c;
 }
 
+// 停用指定的控制器列表
+// 按逆序停用控制器，释放其占用的命令接口
 void ControllerManager::deactivate_controllers(
   const std::vector<ControllerSpec> & rt_controller_list,
   const std::vector<std::string> & controllers_to_deactivate)
@@ -2529,6 +2555,8 @@ void ControllerManager::deactivate_controllers(
   }
 }
 
+// 切换控制器的链式调用模式
+// 当链式控制器被激活/停用时，需要更新相关控制器的链式模式状态
 void ControllerManager::switch_chained_mode(
   const std::vector<std::string> & chained_mode_switch_list, bool to_chained_mode)
 {
@@ -2575,6 +2603,8 @@ void ControllerManager::switch_chained_mode(
   }
 }
 
+// 激活指定的控制器列表
+// 为控制器声明命令和状态接口，并调用控制器的 on_activate() 回调
 void ControllerManager::activate_controllers(
   const std::vector<ControllerSpec> & rt_controller_list,
   const std::vector<std::string> & controllers_to_activate, int strictness)
@@ -2774,6 +2804,8 @@ void ControllerManager::activate_controllers(
   }
 }
 
+// 列出所有控制器服务回调
+// 返回所有已加载控制器的名称、状态和类型信息
 void ControllerManager::list_controllers_srv_cb(
   const std::shared_ptr<controller_manager_msgs::srv::ListControllers::Request>,
   std::shared_ptr<controller_manager_msgs::srv::ListControllers::Response> response)
@@ -2881,6 +2913,8 @@ void ControllerManager::list_controllers_srv_cb(
   RCLCPP_DEBUG(get_logger(), "list controller service finished");
 }
 
+// 列出可用控制器类型服务回调
+// 返回所有通过 pluginlib 可用的控制器插件类型
 void ControllerManager::list_controller_types_srv_cb(
   const std::shared_ptr<controller_manager_msgs::srv::ListControllerTypes::Request>,
   std::shared_ptr<controller_manager_msgs::srv::ListControllerTypes::Response> response)
@@ -2908,6 +2942,8 @@ void ControllerManager::list_controller_types_srv_cb(
   RCLCPP_DEBUG(get_logger(), "list types service finished");
 }
 
+// 加载控制器服务回调
+// 通过 pluginlib 动态加载指定类型的控制器插件
 void ControllerManager::load_controller_service_cb(
   const std::shared_ptr<controller_manager_msgs::srv::LoadController::Request> request,
   std::shared_ptr<controller_manager_msgs::srv::LoadController::Response> response)
@@ -2923,6 +2959,8 @@ void ControllerManager::load_controller_service_cb(
     get_logger(), "loading service finished for controller '%s' ", request->name.c_str());
 }
 
+// 配置控制器服务回调
+// 将指定控制器从 UNCONFIGURED 状态转换为 INACTIVE 状态
 void ControllerManager::configure_controller_service_cb(
   const std::shared_ptr<controller_manager_msgs::srv::ConfigureController::Request> request,
   std::shared_ptr<controller_manager_msgs::srv::ConfigureController::Response> response)
@@ -2939,6 +2977,9 @@ void ControllerManager::configure_controller_service_cb(
     get_logger(), "configuring service finished for controller '%s' ", request->name.c_str());
 }
 
+// 重新加载控制器库服务回调
+// 强制重新扫描 pluginlib 的控制器插件缓存
+// 用于开发期间热加载新编译的控制器插件
 void ControllerManager::reload_controller_libraries_service_cb(
   const std::shared_ptr<controller_manager_msgs::srv::ReloadControllerLibraries::Request> request,
   std::shared_ptr<controller_manager_msgs::srv::ReloadControllerLibraries::Response> response)
@@ -3024,6 +3065,9 @@ void ControllerManager::reload_controller_libraries_service_cb(
   RCLCPP_DEBUG(get_logger(), "reload libraries service finished");
 }
 
+// 切换控制器服务回调
+// 核心服务：请求激活/停用一组控制器
+// 参数包括：要启动的控制器列表、要停止的控制器列表、严格性级别、启动/停止顺序
 void ControllerManager::switch_controller_service_cb(
   const std::shared_ptr<controller_manager_msgs::srv::SwitchController::Request> request,
   std::shared_ptr<controller_manager_msgs::srv::SwitchController::Response> response)
@@ -3041,6 +3085,8 @@ void ControllerManager::switch_controller_service_cb(
   RCLCPP_DEBUG(get_logger(), "switching service finished");
 }
 
+// 卸载控制器服务回调
+// 卸载指定控制器，释放其占用的所有资源
 void ControllerManager::unload_controller_service_cb(
   const std::shared_ptr<controller_manager_msgs::srv::UnloadController::Request> request,
   std::shared_ptr<controller_manager_msgs::srv::UnloadController::Response> response)
@@ -3057,6 +3103,8 @@ void ControllerManager::unload_controller_service_cb(
     get_logger(), "unloading service finished for controller '%s' ", request->name.c_str());
 }
 
+// 清理控制器服务回调
+// 将指定控制器从 INACTIVE 状态转换为 UNCONFIGURED 状态
 void ControllerManager::cleanup_controller_service_cb(
   const std::shared_ptr<controller_manager_msgs::srv::CleanupController::Request> request,
   std::shared_ptr<controller_manager_msgs::srv::CleanupController::Response> response)
@@ -3072,6 +3120,8 @@ void ControllerManager::cleanup_controller_service_cb(
     get_logger(), "cleanup service finished for controller '%s' ", request->name.c_str());
 }
 
+// 列出硬件组件服务回调
+// 返回所有硬件组件的名称、类型、状态和接口信息
 void ControllerManager::list_hardware_components_srv_cb(
   const std::shared_ptr<controller_manager_msgs::srv::ListHardwareComponents::Request>,
   std::shared_ptr<controller_manager_msgs::srv::ListHardwareComponents::Response> response)
@@ -3137,6 +3187,8 @@ void ControllerManager::list_hardware_components_srv_cb(
   RCLCPP_DEBUG(get_logger(), "list hardware components service finished");
 }
 
+// 列出硬件接口服务回调
+// 返回所有可用和已声明的状态/命令接口列表
 void ControllerManager::list_hardware_interfaces_srv_cb(
   const std::shared_ptr<controller_manager_msgs::srv::ListHardwareInterfaces::Request>,
   std::shared_ptr<controller_manager_msgs::srv::ListHardwareInterfaces::Response> response)
@@ -3169,6 +3221,8 @@ void ControllerManager::list_hardware_interfaces_srv_cb(
   RCLCPP_DEBUG(get_logger(), "list hardware interfaces service finished");
 }
 
+// 设置硬件组件状态服务回调
+// 请求将指定硬件组件转换到目标生命周期状态
 void ControllerManager::set_hardware_component_state_srv_cb(
   const std::shared_ptr<controller_manager_msgs::srv::SetHardwareComponentState::Request> request,
   std::shared_ptr<controller_manager_msgs::srv::SetHardwareComponentState::Response> response)
@@ -3217,6 +3271,9 @@ std::vector<std::string> ControllerManager::get_controller_names()
   return names;
 }
 
+// 控制循环的读阶段
+// 从所有硬件组件读取状态数据，更新控制器可用的状态接口值
+// 在此阶段还会执行控制器切换的管理操作（manage_switch）
 void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   periodicity_stats_.add_measurement(1.0 / period.seconds());
@@ -3254,6 +3311,13 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
       .count();
 }
 
+// 管理控制器切换操作
+// 在read和update之间执行，完成以下操作：
+// 1. 执行命令模式切换（prepare/perform_command_mode_switch）
+// 2. 停用需要停用的控制器（释放命令接口）
+// 3. 激活需要激活的控制器（声明命令接口）
+// 4. 更新控制器链式调用模式
+// 5. 切换实时控制器列表（原子操作，无锁）
 void ControllerManager::manage_switch()
 {
   std::unique_lock<std::mutex> guard(switch_params_.mutex, std::try_to_lock);
@@ -3314,6 +3378,9 @@ void ControllerManager::manage_switch()
       .count();
 }
 
+// 控制循环的更新阶段
+// 按顺序执行所有已激活控制器的 update() 方法
+// 控制器在此阶段读取状态接口、计算控制输出、写入命令接口
 controller_interface::return_type ControllerManager::update(
   const rclcpp::Time & time, const rclcpp::Duration & period)
 {
@@ -3540,6 +3607,9 @@ controller_interface::return_type ControllerManager::update(
   return ret;
 }
 
+// 控制循环的写阶段
+// 将所有控制器输出的命令值写入硬件组件
+// 在写入前会执行关节限位检查
 void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   const auto start_time = std::chrono::steady_clock::now();
@@ -3677,6 +3747,8 @@ std::vector<ControllerSpec> & ControllerManager::RTControllerListWrapper::get_un
   return controllers_lists_[free_controllers_list];
 }
 
+// 获取更新后的控制器列表
+// 实时安全的控制器列表访问，使用双缓冲机制
 const std::vector<ControllerSpec> & ControllerManager::RTControllerListWrapper::get_updated_list(
   const std::lock_guard<controllers_lock_type> &) const
 {
@@ -3688,6 +3760,8 @@ const std::vector<ControllerSpec> & ControllerManager::RTControllerListWrapper::
   return controllers_lists_[updated_controllers_index_];
 }
 
+// 切换到更新后的控制器列表
+// 原子操作，将非实时侧修改的列表切换为实时侧使用的列表
 void ControllerManager::RTControllerListWrapper::switch_updated_list(
   const std::lock_guard<controllers_lock_type> &)
 {
@@ -3717,6 +3791,8 @@ int ControllerManager::RTControllerListWrapper::get_other_list(int index) const
   return (index + 1) % 2;
 }
 
+// 等待实时线程不再使用控制器列表
+// 在非实时侧修改列表前调用，确保实时线程不在使用旧列表
 void ControllerManager::RTControllerListWrapper::wait_until_rt_not_using(
   int index, std::chrono::microseconds sleep_period) const
 {
@@ -3743,6 +3819,8 @@ unsigned int ControllerManager::get_update_rate() const { return update_rate_; }
 
 rclcpp::Clock::SharedPtr ControllerManager::get_trigger_clock() const { return trigger_clock_; }
 
+// 执行硬件命令模式变更
+// 在控制器切换过程中，协调各硬件组件的命令模式切换
 void ControllerManager::perform_hardware_command_mode_change(
   const std::vector<ControllerSpec> & rt_controller_list,
   const std::vector<std::string> & activate_controllers_list,
@@ -3771,6 +3849,8 @@ void ControllerManager::perform_hardware_command_mode_change(
   }
 }
 
+// 传播链式模式的停用
+// 当一个链式控制器被停用时，需要递归停用依赖它的后续控制器
 void ControllerManager::propagate_deactivation_of_chained_mode(
   const std::vector<ControllerSpec> & controllers)
 {
@@ -4222,6 +4302,8 @@ ControllerManager::check_fallback_controllers_state_pre_activation(
   return controller_interface::return_type::OK;
 }
 
+// 发布控制器活动状态
+// 定期发布控制器和硬件组件的状态信息到ROS话题
 void ControllerManager::publish_activity()
 {
   controller_manager_msgs::msg::ControllerManagerActivity status_msg;
@@ -4360,6 +4442,8 @@ controller_interface::return_type ControllerManager::check_for_interfaces_availa
   return controller_interface::return_type::OK;
 }
 
+// 控制器活动诊断回调
+// 收集和发布控制器运行状态的诊断信息
 void ControllerManager::controller_activity_diagnostic_callback(
   diagnostic_updater::DiagnosticStatusWrapper & stat)
 {
@@ -4517,6 +4601,8 @@ void ControllerManager::controller_activity_diagnostic_callback(
   }
 }
 
+// 硬件组件诊断回调
+// 收集和发布硬件组件运行状态的诊断信息
 void ControllerManager::hardware_components_diagnostic_callback(
   diagnostic_updater::DiagnosticStatusWrapper & stat)
 {
@@ -4707,6 +4793,8 @@ void ControllerManager::hardware_components_diagnostic_callback(
   }
 }
 
+// 控制器管理器诊断回调
+// 收集和发布控制器管理器自身的诊断信息
 void ControllerManager::controller_manager_diagnostic_callback(
   diagnostic_updater::DiagnosticStatusWrapper & stat)
 {
@@ -4759,6 +4847,8 @@ void ControllerManager::controller_manager_diagnostic_callback(
   }
 }
 
+// 更新控制器链式调用拓扑
+// 当控制器被加载/卸载时，更新控制器之间的链式依赖关系
 void ControllerManager::update_list_with_controller_chain(
   const std::string & ctrl_name, std::vector<std::string>::iterator controller_iterator,
   bool append_to_controller)
@@ -4833,6 +4923,8 @@ void ControllerManager::update_list_with_controller_chain(
   }
 }
 
+// 构建控制器拓扑信息
+// 分析所有控制器之间的参考接口依赖关系，构建有向图
 void ControllerManager::build_controllers_topology_info(
   const std::vector<ControllerSpec> & controllers)
 {
@@ -4960,6 +5052,8 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
   return controller_node_options;
 }
 
+// 清理控制器导出的接口
+// 当链式控制器被停用时，从资源管理器中移除其导出的接口
 void ControllerManager::cleanup_controller_exported_interfaces(const ControllerSpec & controller)
 {
   if (!is_controller_active(controller.c) && controller.c->is_chainable())

@@ -26,6 +26,9 @@
 
 namespace transmission_interface
 {
+// 从 URDF 传动配置加载差速传动实例
+// 解析两个执行器的减速比和偏移量参数
+// 创建并返回 DifferentialTransmission 实例
 std::shared_ptr<Transmission> DifferentialTransmissionLoader::load(
   const hardware_interface::TransmissionInfo & transmission_info)
 {

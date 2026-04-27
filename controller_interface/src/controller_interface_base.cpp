@@ -38,11 +38,15 @@ struct ControllerInterfaceBase::ControllerInterfaceBaseImpl
   mutable std::atomic<uint8_t> lifecycle_id_ = lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN;
 };
 
+// 控制器接口基类构造函数
+// 使用 Pimpl 模式，将实现细节隐藏在 impl_ 中
 ControllerInterfaceBase::ControllerInterfaceBase()
 : impl_(std::make_unique<ControllerInterfaceBaseImpl>())
 {
 }
 
+// 控制器基类析构函数
+// 如果节点已初始化且控制器未处于 FINALIZED 状态，自动调用 shutdown 转换
 ControllerInterfaceBase::~ControllerInterfaceBase()
 {
   // check if node is initialized and we still have a valid context
@@ -59,6 +63,8 @@ ControllerInterfaceBase::~ControllerInterfaceBase()
   }
 }
 
+// 控制器初始化（简化版本）
+// 委托给完整的 init 重载版本
 return_type ControllerInterfaceBase::init(
   const std::string & controller_name, const std::string & urdf, unsigned int cm_update_rate,
   const std::string & node_namespace, const rclcpp::NodeOptions & node_options)
@@ -74,6 +80,12 @@ return_type ControllerInterfaceBase::init(
   return init(params);
 }
 
+// 控制器初始化（完整版本）
+// 核心初始化流程：
+// 1. 创建控制器的生命周期节点
+// 2. 读取控制器参数（更新频率、是否异步等）
+// 3. 设置生命周期状态为 UNCONFIGURED
+// 4. 如果是异步控制器，启动异步更新线程
 return_type ControllerInterfaceBase::init(
   const controller_interface::ControllerInterfaceParams & params)
 {
@@ -188,6 +200,10 @@ return_type ControllerInterfaceBase::init(
   return return_type::OK;
 }
 
+// 配置控制器
+// 执行状态转换：UNCONFIGURED → INACTIVE
+// 调用 on_configure() 回调，控制器在此阶段声明所需的命令/状态接口
+// 配置成功后，控制器进入 INACTIVE 状态，可以声明接口
 const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
 {
   impl_->lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
@@ -288,6 +304,9 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
   return return_value;
 }
 
+// 分配命令和状态接口给控制器
+// 将资源管理器中声明的接口通过 LoanedInterface 传递给控制器
+// 在控制器激活时由 ControllerManager 调用
 void ControllerInterfaceBase::assign_interfaces(
   std::vector<hardware_interface::LoanedCommandInterface> && command_interfaces,
   std::vector<hardware_interface::LoanedStateInterface> && state_interfaces)
@@ -296,12 +315,16 @@ void ControllerInterfaceBase::assign_interfaces(
   state_interfaces_ = std::forward<decltype(state_interfaces)>(state_interfaces);
 }
 
+// 释放控制器占用的命令和状态接口
+// 在控制器停用时由 ControllerManager 调用
+// 通过 LoanedInterface 的 RAII 析构机制自动释放接口声明
 void ControllerInterfaceBase::release_interfaces()
 {
   command_interfaces_.clear();
   state_interfaces_.clear();
 }
 
+// 获取控制器当前的生命周期状态
 const rclcpp_lifecycle::State & ControllerInterfaceBase::get_lifecycle_state() const
 {
   if (!impl_->node_.get())
@@ -311,6 +334,7 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::get_lifecycle_state() c
   return impl_->node_->get_current_state();
 }
 
+// 获取控制器当前的生命周期状态ID
 uint8_t ControllerInterfaceBase::get_lifecycle_id() const
 {
   const auto id = impl_->lifecycle_id_.load(std::memory_order_acquire);
@@ -329,6 +353,10 @@ uint8_t ControllerInterfaceBase::get_lifecycle_id() const
   return id;
 }
 
+// 触发控制器更新
+// 如果是同步控制器，直接调用 update()
+// 如果是异步控制器，将更新请求放入队列，由异步线程执行
+// 返回 ControllerUpdateStatus 表示更新结果
 ControllerUpdateStatus ControllerInterfaceBase::trigger_update(
   const rclcpp::Time & time, const rclcpp::Duration & period)
 {
@@ -377,6 +405,7 @@ ControllerUpdateStatus ControllerInterfaceBase::trigger_update(
   return status;
 }
 
+// 获取控制器的生命周期节点指针
 std::shared_ptr<rclcpp_lifecycle::LifecycleNode> ControllerInterfaceBase::get_node()
 {
   if (!impl_->node_.get())
@@ -386,6 +415,7 @@ std::shared_ptr<rclcpp_lifecycle::LifecycleNode> ControllerInterfaceBase::get_no
   return impl_->node_;
 }
 
+// 获取控制器的生命周期节点指针（const版本）
 std::shared_ptr<const rclcpp_lifecycle::LifecycleNode> ControllerInterfaceBase::get_node() const
 {
   if (!impl_->node_.get())
@@ -395,30 +425,37 @@ std::shared_ptr<const rclcpp_lifecycle::LifecycleNode> ControllerInterfaceBase::
   return impl_->node_;
 }
 
+// 获取控制器的更新频率（Hz）
 unsigned int ControllerInterfaceBase::get_update_rate() const
 {
   return impl_->ctrl_itf_params_.update_rate;
 }
 
+// 检查控制器是否为异步模式
 bool ControllerInterfaceBase::is_async() const { return impl_->is_async_; }
 
+// 获取机器人URDF描述
 const std::string & ControllerInterfaceBase::get_robot_description() const
 {
   return impl_->ctrl_itf_params_.robot_description;
 }
 
+// 获取关节硬限位参数
 const std::unordered_map<std::string, joint_limits::JointLimits> &
 ControllerInterfaceBase::get_hard_joint_limits() const
 {
   return impl_->ctrl_itf_params_.hard_joint_limits;
 }
 
+// 获取关节软限位参数
 const std::unordered_map<std::string, joint_limits::SoftJointLimits> &
 ControllerInterfaceBase::get_soft_joint_limits() const
 {
   return impl_->ctrl_itf_params_.soft_joint_limits;
 }
 
+// 等待异步更新完成
+// 在控制器停用前调用，确保没有正在执行的更新操作
 void ControllerInterfaceBase::wait_for_trigger_update_to_finish()
 {
   if (is_async() && impl_->async_handler_ && impl_->async_handler_->is_running())
@@ -427,12 +464,16 @@ void ControllerInterfaceBase::wait_for_trigger_update_to_finish()
   }
 }
 
+// 准备停用控制器
+// 在停用前执行清理操作，如等待异步更新完成
 void ControllerInterfaceBase::prepare_for_deactivation()
 {
   impl_->skip_async_triggers_.store(true, std::memory_order_release);
   this->wait_for_trigger_update_to_finish();
 }
 
+// 停止异步处理线程
+// 通知异步线程停止并等待其结束
 void ControllerInterfaceBase::stop_async_handler_thread()
 {
   if (is_async() && impl_->async_handler_ && impl_->async_handler_->is_running())
@@ -441,8 +482,10 @@ void ControllerInterfaceBase::stop_async_handler_thread()
   }
 }
 
+// 获取控制器名称（从节点名称获取）
 std::string ControllerInterfaceBase::get_name() const { return get_node()->get_name(); }
 
+// 启用或禁用控制器内省功能
 void ControllerInterfaceBase::enable_introspection(bool enable)
 {
   if (enable)

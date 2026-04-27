@@ -97,6 +97,8 @@ namespace detail
  * \return text of for the tag stripping leading and trailing whitespace
  * \throws std::runtime_error if text is not found
  */
+// 获取XML元素的文本内容
+// 从指定的XML元素中提取文本值，如果元素不存在则抛出异常
 std::string get_text_for_element(
   const tinyxml2::XMLElement * element_it, const std::string & tag_name)
 {
@@ -119,6 +121,8 @@ std::string get_text_for_element(
  * \return attribute value stripping leading and trailing whitespace
  * \throws std::runtime_error if attribute is not found
  */
+// 获取XML元素的指定属性值
+// 从XML元素中读取指定名称的属性值，属性不存在时抛出异常
 std::string get_attribute_value(
   const tinyxml2::XMLElement * element_it, const char * attribute_name, std::string tag_name)
 {
@@ -150,6 +154,8 @@ std::string get_attribute_value(
  * \return attribute value stripping leading and trailing whitespace
  * \throws std::runtime_error if attribute is not found
  */
+// 获取XML元素的指定属性值（const char* 重载版本）
+// 接受 const char* 类型的 tag_name 参数，内部委托给 std::string 版本实现
 std::string get_attribute_value(
   const tinyxml2::XMLElement * element_it, const char * attribute_name, const char * tag_name)
 {
@@ -165,6 +171,10 @@ std::string get_attribute_value(
  * \param[in] default_value When the attribute is not found, this value is returned instead
  * \return attribute value or default
  */
+// 从XML同级元素中查找指定名称的参数值，如果未找到则返回默认值
+// 参数 params_it: 起始XML元素迭代器
+// 参数 parameter_name: 要查找的参数名称
+// 参数 default_value: 未找到时的默认返回值
 double get_parameter_value_or(
   const tinyxml2::XMLElement * params_it, const char * parameter_name, const double default_value)
 {
@@ -203,6 +213,8 @@ double get_parameter_value_or(
  * \return The size.
  * \throws std::runtime_error if not given a positive non-zero integer as value.
  */
+// 解析XML元素的 size 属性，返回接口数组的大小
+// 如果未指定则默认返回 1，值必须为正整数否则抛出异常
 std::size_t parse_size_attribute(const tinyxml2::XMLElement * elem)
 {
   const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kSizeAttribute);
@@ -241,6 +253,9 @@ std::size_t parse_size_attribute(const tinyxml2::XMLElement * elem)
  * \param[in] elem XMLElement that has the data_type attribute.
  * \return string specifying the data type.
  */
+// 解析接口的数据类型属性
+// 从XML元素中读取 data_type 属性，默认为 "double"
+// 支持的数据类型：double, float, bool, int, string
 std::string parse_data_type_attribute(const tinyxml2::XMLElement * elem)
 {
   const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kDataTypeAttribute);
@@ -265,6 +280,8 @@ std::string parse_data_type_attribute(const tinyxml2::XMLElement * elem)
  * \param[in] elem XMLElement that has the rw_rate attribute.
  * \return unsigned int specifying the read/write rate.
  */
+// 解析XML元素的 rw_rate 属性，返回硬件组件的读写速率（Hz）
+// 如果未指定则默认返回 0，负数或无效值会抛出异常
 unsigned int parse_rw_rate_attribute(const tinyxml2::XMLElement * elem)
 {
   const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kReadWriteRateAttribute);
@@ -309,6 +326,9 @@ unsigned int parse_rw_rate_attribute(const tinyxml2::XMLElement * elem)
  * \param[in] elem XMLElement that has the data_type attribute.
  * \return boolean specifying the if the value read was true or false.
  */
+// 解析硬件组件的异步属性
+// 从XML元素中读取 is_async 属性，默认为 false
+// 异步硬件组件的 read/write 在独立线程中执行
 bool parse_is_async_attribute(const tinyxml2::XMLElement * elem)
 {
   const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kIsAsyncAttribute);
@@ -323,6 +343,8 @@ bool parse_is_async_attribute(const tinyxml2::XMLElement * elem)
  * \param[in] elem XMLElement that has the thread_priority attribute.
  * \return positive integer specifying the thread priority.
  */
+// 解析XML元素的 thread_priority 属性，返回异步硬件组件的线程优先级
+// 如果未指定则默认返回 50，值必须为正整数否则抛出异常
 int parse_thread_priority_attribute(const tinyxml2::XMLElement * elem)
 {
   const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kThreadPriorityAttribute);
@@ -353,6 +375,10 @@ int parse_thread_priority_attribute(const tinyxml2::XMLElement * elem)
  * \return key-value map with parameters
  * \throws std::runtime_error if a component attribute or tag is not found
  */
+// 从XML节点解析 <param> 标签列表，返回参数名到参数值的映射表
+// 每个 <param> 标签必须有 name 属性，标签内容为参数值
+// 参数 params_it: 指向第一个 <param> 元素的迭代器
+// 参数 context_name: 上下文名称，用于错误信息提示
 std::unordered_map<std::string, std::string> parse_parameters_from_xml(
   const tinyxml2::XMLElement * params_it, const std::string & context_name)
 {
@@ -387,6 +413,11 @@ std::unordered_map<std::string, std::string> parse_parameters_from_xml(
  * \return list of interface types
  * \throws std::runtime_error if the interfaceType text not set in a tag
  */
+// 从XML节点解析接口（command_interface 或 state_interface）的详细信息
+// 包括接口名称、min/max 限位参数、enable_limits、initial_value、data_type、size 等
+// 参数 interfaces_it: 指向接口XML元素的迭代器
+// 参数 context_name: 上下文名称，用于错误信息提示
+// 返回值: InterfaceInfo 结构体，包含接口的全部配置信息
 hardware_interface::InterfaceInfo parse_interfaces_from_xml(
   const tinyxml2::XMLElement * interfaces_it, const std::string & context_name)
 {
@@ -450,6 +481,9 @@ hardware_interface::InterfaceInfo parse_interfaces_from_xml(
  * \return ComponentInfo filled with information about component
  * \throws std::runtime_error if a component attribute or tag is not found
  */
+// 从XML节点解析组件信息（关节或传感器）
+// 解析组件名称、参数和接口描述
+// 构建并返回 ComponentInfo 结构体
 ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it)
 {
   ComponentInfo component;
@@ -521,6 +555,8 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
  * info should be found
  * \throws std::runtime_error if a required component attribute or tag is not found.
  */
+// 从XML节点解析复杂组件信息（支持子组件和自定义接口）
+// 用于解析包含子组件（如GPIO）的复杂硬件配置
 ComponentInfo parse_complex_component_from_xml(const tinyxml2::XMLElement * component_it)
 {
   ComponentInfo component;
@@ -557,6 +593,8 @@ ComponentInfo parse_complex_component_from_xml(const tinyxml2::XMLElement * comp
   return component;
 }
 
+// 从XML节点解析传动的关节信息
+// 解析关节名称、角色和接口偏移量
 JointInfo parse_transmission_joint_from_xml(const tinyxml2::XMLElement * element_it)
 {
   JointInfo joint_info;
@@ -569,6 +607,8 @@ JointInfo parse_transmission_joint_from_xml(const tinyxml2::XMLElement * element
   return joint_info;
 }
 
+// 从XML节点解析传动的执行器信息
+// 解析执行器名称、角色和机械减速比
 ActuatorInfo parse_transmission_actuator_from_xml(const tinyxml2::XMLElement * element_it)
 {
   ActuatorInfo actuator_info;
@@ -587,6 +627,9 @@ ActuatorInfo parse_transmission_actuator_from_xml(const tinyxml2::XMLElement * e
  * \return TransmissionInfo filled with information about transmission
  * \throws std::runtime_error if an attribute or tag is not found
  */
+// 从XML节点解析完整的传动配置
+// 解析传动类型、名称、关节列表和执行器列表
+// 构建并返回 TransmissionInfo 结构体
 TransmissionInfo parse_transmission_from_xml(const tinyxml2::XMLElement * transmission_it)
 {
   TransmissionInfo transmission;
@@ -634,6 +677,9 @@ TransmissionInfo parse_transmission_from_xml(const tinyxml2::XMLElement * transm
  * \param[in,out] hardware HardwareInfo structure with elements already parsed.
  * \throws std::runtime_error
  */
+// 自动填充传动接口描述
+// 根据关节和执行器的接口类型，自动生成传动所需的接口映射
+// 简化URDF配置，用户无需手动指定每个接口
 void auto_fill_transmission_interfaces(HardwareInfo & hardware)
 {
   for (auto & transmission : hardware.transmissions)
@@ -695,6 +741,16 @@ void auto_fill_transmission_interfaces(HardwareInfo & hardware)
  * \return HardwareInfo filled with information about the robot
  * \throws std::runtime_error if a attributes or tag are not found
  */
+// 从单个 <ros2_control> XML标签解析完整的硬件资源配置
+// 核心解析函数，解析以下内容：
+// 1. 硬件插件名称和类型
+// 2. 硬件参数
+// 3. 关节配置（命令/状态接口）
+// 4. 传感器配置
+// 5. GPIO配置
+// 6. 传动配置
+// 7. 关节限位参数
+// 返回完整的 HardwareInfo 结构体
 HardwareInfo parse_resource_from_xml(
   const tinyxml2::XMLElement * ros2_control_it, const std::string & urdf)
 {
@@ -836,6 +892,8 @@ HardwareInfo parse_resource_from_xml(
  * @param max The maximum value to be retrieved.
  * @return true if the values are retrieved, false otherwise.
  */
+// 从接口信息中提取最小/最大限位值
+// 读取接口的 min 和 max 参数，用于关节限位
 bool retrieve_min_max_interface_values(const InterfaceInfo & itf, double & min, double & max)
 {
   try
@@ -870,6 +928,8 @@ bool retrieve_min_max_interface_values(const InterfaceInfo & itf, double & min, 
  * @param itr The interface tag to retrieve the values from.
  * @param limits The joint limits to be set.
  */
+// 设置自定义接口的限位值
+// 从接口参数中读取并设置关节限位参数
 void set_custom_interface_values(const InterfaceInfo & itr, joint_limits::JointLimits & limits)
 {
   if (itr.name == hardware_interface::HW_IF_ACCELERATION)
@@ -937,6 +997,8 @@ void set_custom_interface_values(const InterfaceInfo & itr, joint_limits::JointL
  * @param joint The joint component info containing interfaces and joint-level enable_limits.
  * @param limits The joint limits to be set.
  */
+// 更新关节的接口限位
+// 综合所有接口的限位参数，更新 JointLimits 结构体
 void update_interface_limits(const ComponentInfo & joint, joint_limits::JointLimits & limits)
 {
   // If limits are disabled at the joint level, disable all limit flags
@@ -1001,13 +1063,16 @@ void update_interface_limits(const ComponentInfo & joint, joint_limits::JointLim
 
 }  // namespace detail
 
-// 从 URDF 字符串解析所有 ros2_control 硬件资源信息
-// 这是该文件的主入口函数，流程：
-// 1. 验证并解析 URDF XML
-// 2. 查找 <ros2_control> 标签
-// 3. 解析每个硬件组件的配置
-// 4. 处理 mimic 关节信息
-// 5. 合并 URDF 中的关节限位与 ros2_control 中的接口限位
+// 从URDF字符串解析 ros2_control 硬件资源配置
+// 这是硬件配置解析的核心入口函数
+// 流程：
+// 1. 解析URDF XML文档
+// 2. 查找所有 <ros2_control> 标签
+// 3. 对每个 <ros2_control> 标签，解析其硬件组件、关节、传感器和GPIO配置
+// 4. 解析 URDF 中的 mimic 关节信息，验证与 ros2_control 配置的一致性
+// 5. 从 URDF 中提取关节限位信息并与 ros2_control 中的接口限位合并
+// 参数 urdf: URDF格式的机器人描述字符串
+// 返回值: 包含所有硬件组件配置信息的 vector<HardwareInfo>
 std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & urdf)
 {
   // Check if everything OK with URDF string
@@ -1144,6 +1209,10 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
   return hardware_info;
 }
 
+// 从组件信息列表解析状态接口描述，返回 InterfaceDescription 向量
+// 遍历每个组件的所有状态接口，创建对应的 InterfaceDescription 对象
+// 参数 component_info: 组件信息列表（关节、传感器或GPIO）
+// 返回值: 状态接口描述的向量
 std::vector<InterfaceDescription> parse_state_interface_descriptions(
   const std::vector<ComponentInfo> & component_info)
 {
@@ -1161,6 +1230,9 @@ std::vector<InterfaceDescription> parse_state_interface_descriptions(
   return component_state_interface_descriptions;
 }
 
+// 解析状态接口描述列表
+// 从XML中解析 <state_interface> 标签列表
+// 构建接口名称、数据类型和初始值等信息
 void parse_state_interface_descriptions(
   const std::vector<ComponentInfo> & component_info,
   std::unordered_map<std::string, InterfaceDescription> & state_interfaces_map)
@@ -1177,6 +1249,10 @@ void parse_state_interface_descriptions(
   }
 }
 
+// 从组件信息列表解析命令接口描述，返回 InterfaceDescription 向量
+// 遍历每个组件的所有命令接口，创建对应的 InterfaceDescription 对象
+// 参数 component_info: 组件信息列表（关节、传感器或GPIO）
+// 返回值: 命令接口描述的向量
 std::vector<InterfaceDescription> parse_command_interface_descriptions(
   const std::vector<ComponentInfo> & component_info)
 {
@@ -1194,6 +1270,9 @@ std::vector<InterfaceDescription> parse_command_interface_descriptions(
   return component_command_interface_descriptions;
 }
 
+// 解析命令接口描述列表
+// 从XML中解析 <command_interface> 标签列表
+// 构建接口名称和数据类型等信息
 void parse_command_interface_descriptions(
   const std::vector<ComponentInfo> & component_info,
   std::unordered_map<std::string, InterfaceDescription> & command_interfaces_map)

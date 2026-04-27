@@ -39,12 +39,15 @@ int const kSchedPriority = 50;
 
 int main(int argc, char ** argv)
 {
+  // 步骤1: 初始化 ROS2 通信框架
   rclcpp::init(argc, argv);
 
+  // 步骤2: 创建多线程执行器，用于处理回调和服务请求
   std::shared_ptr<rclcpp::Executor> executor =
     std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
   std::string manager_node_name = "controller_manager";
 
+  // 步骤3: 获取控制器管理器节点的默认选项，并合并命令行参数
   rclcpp::NodeOptions cm_node_options = controller_manager::get_cm_node_options();
   std::vector<std::string> node_arguments = cm_node_options.arguments();
   for (int i = 1; i < argc; ++i)
@@ -58,9 +61,12 @@ int main(int argc, char ** argv)
   }
   cm_node_options.arguments(node_arguments);
 
+  // 步骤4: 创建控制器管理器实例，这是 ros2_control 的核心组件
+  // 构造过程中会：初始化参数、加载URDF、解析硬件配置、初始化ResourceManager
   auto cm = std::make_shared<controller_manager::ControllerManager>(
     executor, manager_node_name, "", cm_node_options);
 
+  // 步骤5: 读取配置参数，包括仿真时间、实时内核检测、内存锁定等
   const bool use_sim_time = cm->get_parameter_or("use_sim_time", false);
 
   const bool has_realtime = realtime_tools::has_realtime_kernel();
@@ -83,9 +89,12 @@ int main(int argc, char ** argv)
     cm->get_logger(), "Spawning %s RT thread with scheduler priority: %d", cm->get_name(),
     thread_priority);
 
+  // 步骤6: 创建控制循环线程，该线程以实时优先级运行
+  // 控制循环的核心流程：read → update → write，以固定频率执行
   std::thread cm_thread(
     [cm, thread_priority, use_sim_time, manage_overruns]()
     {
+      // 步骤6a: 设置CPU亲和性，将控制线程绑定到指定CPU核心
       rclcpp::Parameter cpu_affinity_param;
       if (cm->get_parameter("cpu_affinity", cpu_affinity_param))
       {
@@ -108,6 +117,7 @@ int main(int argc, char ** argv)
         }
       }
 
+      // 步骤6b: 配置FIFO实时调度策略，设置线程优先级
       if (!realtime_tools::configure_sched_fifo(thread_priority))
       {
         RCLCPP_WARN(
@@ -124,6 +134,7 @@ int main(int argc, char ** argv)
           thread_priority);
       }
 
+      // 步骤6c: 等待时钟启动，确保时间源可用后再开始控制循环
       // wait for the clock to be available
       cm->get_clock()->wait_until_started();
       cm->get_clock()->sleep_for(rclcpp::Duration::from_seconds(1.0 / cm->get_update_rate()));
@@ -137,6 +148,8 @@ int main(int argc, char ** argv)
 
       std::chrono::steady_clock::time_point next_iteration_time{std::chrono::steady_clock::now()};
 
+      // 步骤6d: 主控制循环 - 以固定频率持续执行
+      // 每次循环执行三个阶段：read(读取硬件状态) → update(控制器计算) → write(写入硬件命令)
       while (rclcpp::ok())
       {
         // calculate measured period
@@ -144,11 +157,17 @@ int main(int argc, char ** argv)
         auto const measured_period = current_time - previous_time;
         previous_time = current_time;
 
+        // 阶段1: 从所有硬件组件读取状态数据
         // execute update loop
         cm->read(cm->get_trigger_clock()->now(), measured_period);
+        // 阶段2: 执行所有已激活控制器的 update() 方法
         cm->update(cm->get_trigger_clock()->now(), measured_period);
+        // 阶段3: 将控制器输出写入所有硬件组件
         cm->write(cm->get_trigger_clock()->now(), measured_period);
 
+        // 步骤6e: 睡眠等待下一个周期到达
+        // 仿真时间模式: 使用 ROS 时钟的 sleep_until 精确同步
+        // 真实时间模式: 使用 steady_clock 的 sleep_until，并检测超时（overrun）
         // wait until we hit the end of the period
         if (use_sim_time)
         {
@@ -189,8 +208,10 @@ int main(int argc, char ** argv)
       }
     });
 
+  // 步骤7: 将控制器管理器节点添加到执行器，开始处理ROS回调（服务请求等）
   executor->add_node(cm);
   executor->spin();
+  // 步骤8: 等待控制循环线程结束，然后关闭ROS2
   cm_thread.join();
   rclcpp::shutdown();
   return 0;

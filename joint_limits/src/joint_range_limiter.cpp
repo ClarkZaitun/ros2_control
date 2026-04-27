@@ -28,6 +28,9 @@
 namespace joint_limits
 {
 
+// 饱和限位器初始化（JointControlInterfacesData 特化版本）
+// 检查关节数量是否为1，因为该限位器仅支持单关节
+// 初始化上一命令缓存（prev_command_）
 template <>
 bool JointSaturationLimiter<JointControlInterfacesData>::on_init()
 {
@@ -44,6 +47,9 @@ bool JointSaturationLimiter<JointControlInterfacesData>::on_init()
   return result;
 }
 
+// 执行范围限位强制约束
+// 限制关节命令值在指定的运动范围内
+// 分别对位置、速度、力矩、加速度和加加速度进行限位计算并截断
 template <>
 bool JointSaturationLimiter<JointControlInterfacesData>::on_enforce(
   const JointControlInterfacesData & actual, JointControlInterfacesData & desired,

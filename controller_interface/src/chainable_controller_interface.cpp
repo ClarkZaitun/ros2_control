@@ -28,10 +28,18 @@
 
 namespace controller_interface
 {
+// 可链式控制器构造函数
+// 初始化链式模式标志为 false
 ChainableControllerInterface::ChainableControllerInterface() : ControllerInterfaceBase() {}
 
+// 可链式控制器始终返回 true
 bool ChainableControllerInterface::is_chainable() const { return true; }
 
+// 链式控制器更新函数
+// 与标准控制器不同，链式控制器在更新后需要：
+// 1. 执行控制算法计算
+// 2. 更新导出的参考接口值（供后续控制器使用）
+// 3. 更新导出的状态接口值（供其他控制器读取）
 return_type ChainableControllerInterface::update(
   const rclcpp::Time & time, const rclcpp::Duration & period)
 {
@@ -51,6 +59,10 @@ return_type ChainableControllerInterface::update(
   return ret;
 }
 
+// 导出链式控制器的状态接口
+// 调用 on_export_state_interfaces_list() 获取接口描述
+// 为每个接口创建 StateInterface 并注册到接口映射中
+// 其他控制器可以通过这些接口读取本控制器的内部状态
 std::vector<hardware_interface::StateInterface::ConstSharedPtr>
 ChainableControllerInterface::export_state_interfaces()
 {
@@ -161,6 +173,10 @@ ChainableControllerInterface::export_state_interfaces()
   return state_interfaces_ptrs_vec;
 }
 
+// 导出链式控制器的参考接口
+// 调用 on_export_reference_interfaces_list() 获取接口描述
+// 为每个接口创建 CommandInterface 并注册到接口映射中
+// 前一个控制器可以通过这些接口写入参考值给本控制器
 std::vector<hardware_interface::CommandInterface::SharedPtr>
 ChainableControllerInterface::export_reference_interfaces()
 {
@@ -290,6 +306,9 @@ ChainableControllerInterface::export_reference_interfaces()
   return reference_interfaces_ptrs_vec;
 }
 
+// 设置链式调用模式
+// 当 chained_mode=true 时，控制器的参考值来自前一个控制器的输出
+// 调用 on_set_chained_mode() 通知子类链式模式变化
 bool ChainableControllerInterface::set_chained_mode(bool chained_mode)
 {
   bool result = false;
@@ -316,10 +335,17 @@ bool ChainableControllerInterface::set_chained_mode(bool chained_mode)
   return result;
 }
 
+// 检查控制器是否处于链式调用模式
 bool ChainableControllerInterface::is_in_chained_mode() const { return in_chained_mode_; }
 
+// 链式模式变化回调（虚函数）
+// 子类可重写此方法在链式模式变化时执行特定操作
+// 默认实现返回 true（接受模式变化）
 bool ChainableControllerInterface::on_set_chained_mode(bool /*chained_mode*/) { return true; }
 
+// 导出状态接口回调（虚函数）
+// 子类必须重写此方法声明要导出的状态接口
+// 默认实现返回空列表
 std::vector<hardware_interface::StateInterface>
 ChainableControllerInterface::on_export_state_interfaces()
 {
@@ -333,6 +359,8 @@ ChainableControllerInterface::on_export_state_interfaces()
   return state_interfaces;
 }
 
+// 导出状态接口列表回调（虚函数）
+// 返回状态接口描述列表
 std::vector<hardware_interface::StateInterface::SharedPtr>
 ChainableControllerInterface::on_export_state_interfaces_list()
 {
@@ -340,6 +368,9 @@ ChainableControllerInterface::on_export_state_interfaces_list()
   return {};
 }
 
+// 导出参考接口回调（虚函数）
+// 子类必须重写此方法声明要导出的参考接口
+// 默认实现返回空列表
 std::vector<hardware_interface::CommandInterface>
 ChainableControllerInterface::on_export_reference_interfaces()
 {
@@ -354,6 +385,8 @@ ChainableControllerInterface::on_export_reference_interfaces()
   return reference_interfaces;
 }
 
+// 导出参考接口列表回调（虚函数）
+// 返回参考接口描述列表
 std::vector<hardware_interface::CommandInterface::SharedPtr>
 ChainableControllerInterface::on_export_reference_interfaces_list()
 {

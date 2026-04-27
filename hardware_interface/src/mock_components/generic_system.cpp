@@ -40,9 +40,8 @@
 namespace mock_components
 {
 
-// 初始化模拟系统：解析各种模拟参数
-// 包括：mock_sensor_commands、mock_gpio_commands、disable_commands、
-// calculate_dynamics、position_state_following_offset 等
+// 模拟系统初始化
+// 读取模拟参数：命令回环模式、动力学计算模式、模仿关节配置等
 CallbackReturn GenericSystem::on_init(
   const hardware_interface::HardwareComponentInterfaceParams & params)
 {
@@ -174,6 +173,9 @@ CallbackReturn GenericSystem::on_init(
   return CallbackReturn::SUCCESS;
 }
 
+// 导出未列出的命令接口描述
+// 当启用 mock_sensor_commands 或 mock_gpio_commands 时，
+// 为传感器/GPIO 的状态接口创建对应的命令接口
 std::vector<hardware_interface::InterfaceDescription>
 GenericSystem::export_unlisted_command_interface_descriptions()
 {
@@ -193,6 +195,9 @@ GenericSystem::export_unlisted_command_interface_descriptions()
   return command_interface_descriptions;
 }
 
+// 准备命令模式切换
+// 在启用动力学计算时，验证每个关节至少有一个标准接口（位置/速度/加速度）
+// 不支持同时请求多个控制接口
 return_type GenericSystem::prepare_command_mode_switch(
   const std::vector<std::string> & start_interfaces,
   const std::vector<std::string> & /*stop_interfaces*/)
@@ -273,6 +278,8 @@ return_type GenericSystem::prepare_command_mode_switch(
   return ret_val;
 }
 
+// 执行命令模式切换
+// 根据启动的接口类型设置关节的控制模式（位置/速度/加速度）
 return_type GenericSystem::perform_command_mode_switch(
   const std::vector<std::string> & start_interfaces,
   const std::vector<std::string> & /*stop_interfaces*/)
@@ -312,6 +319,10 @@ return_type GenericSystem::perform_command_mode_switch(
   return hardware_interface::return_type::OK;
 }
 
+// 配置模拟系统
+// 设置接口初始值，将 NaN 状态初始化为 0
+// 对位置接口应用状态跟随偏移量
+// 默认设置关节控制模式为位置控制
 hardware_interface::CallbackReturn GenericSystem::on_configure(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
@@ -340,10 +351,12 @@ hardware_interface::CallbackReturn GenericSystem::on_configure(
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-// 读取操作（模拟硬件的核心逻辑）：
-// 根据配置，将命令值镜像到状态值
-// 如果启用动力学计算，会根据控制模式（位置/速度/加速度）进行积分运算
-// 如果禁用命令传播，则直接返回而不更新状态
+// 读取模拟硬件状态
+// 根据配置模式执行：
+// 1. 命令回环模式：将命令值直接复制到状态值
+// 2. 动力学模式：根据速度/加速度积分计算位置
+// 3. 禁用命令传播时，不更新状态值
+// 还会处理 mimic 关节、模拟传感器和 GPIO 接口的回环
 return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
   if (command_propagation_disabled_)
@@ -621,6 +634,9 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
 }
 
 // Private methods
+// 填充命令接口描述
+// 将组件（传感器/GPIO）的状态接口转换为命令接口描述
+// 仅添加尚未存在于命令接口列表中的接口
 bool GenericSystem::populate_interfaces(
   const std::vector<hardware_interface::ComponentInfo> & components,
   std::vector<hardware_interface::InterfaceDescription> & command_interface_descriptions) const

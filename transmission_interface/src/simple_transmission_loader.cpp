@@ -26,6 +26,9 @@
 
 namespace transmission_interface
 {
+// 从 URDF 传动配置加载简单传动实例
+// 解析减速比（reduction）和偏移量（offset）参数
+// 创建并返回 SimpleTransmission 实例
 std::shared_ptr<Transmission> SimpleTransmissionLoader::load(
   const hardware_interface::TransmissionInfo & transmission_info)
 {

@@ -29,6 +29,15 @@ constexpr double VALUE_CONSIDERED_ZERO = 1e-10;
 
 namespace joint_limits
 {
+// 执行饱和限位强制约束
+// 核心限位逻辑：
+// 1. 对位置命令施加限位截断
+// 2. 根据位置限位计算最大允许速度
+// 3. 对速度命令施加限位截断
+// 4. 根据速度限位计算最大允许加速度
+// 5. 对加速度命令施加限位截断
+// 6. 对力矩命令施加限位截断
+// 使用对数减速策略避免突然截断
 template <>
 bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enforce(
   const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,

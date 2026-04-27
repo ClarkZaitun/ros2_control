@@ -27,6 +27,10 @@
 namespace joint_limits
 {
 
+// 执行软限位强制约束
+// 在硬限位范围内设置软限位边界（k_position, k_velocity）
+// 当命令接近软限位边界时，按比例减小允许的命令值
+// 实现平滑过渡，避免硬截断导致的不连续
 bool JointSoftLimiter::on_enforce(
   const JointControlInterfacesData & actual, JointControlInterfacesData & desired,
   const rclcpp::Duration & dt)

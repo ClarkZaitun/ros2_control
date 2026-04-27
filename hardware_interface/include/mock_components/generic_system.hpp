@@ -61,6 +61,8 @@ public:
 
   return_type read(const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
+  // 写入模拟硬件命令
+  // 模拟系统通常在 write 中不做额外处理，直接返回 OK
   return_type write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
     return return_type::OK;

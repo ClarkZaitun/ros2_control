@@ -75,13 +75,15 @@ HardwareComponentInterface::~HardwareComponentInterface()
   async_handler_.reset();
 }
 
-// 初始化硬件组件接口：这是硬件组件的完整初始化流程
-// 1. 设置时钟和日志
-// 2. 如果是异步组件，创建并启动异步处理线程
-// 3. 创建 ROS2 节点并添加到执行器
-// 4. 设置硬件状态发布器（如果配置了 status_publish_rate）
-// 5. 解析接口描述（根据硬件类型：actuator/sensor/system）
-// 6. 调用用户自定义的 on_init 方法
+// 硬件组件接口初始化
+// 核心初始化流程：
+// 1. 存储 HardwareInfo 和配置参数
+// 2. 验证硬件类型（Actuator/Sensor/System）与实际插件类型匹配
+// 3. 调用 on_init() 执行用户自定义的初始化逻辑
+// 4. 导出状态和命令接口
+// 5. 设置接口初始值（从 URDF 中的 initial_value 参数读取）
+// 6. 验证所有必需的接口都已正确导出
+// 7. 启动异步操作线程
 CallbackReturn HardwareComponentInterface::init(
   const hardware_interface::HardwareComponentParams & params)
 {
@@ -255,6 +257,8 @@ CallbackReturn HardwareComponentInterface::init(
   return on_init(interface_params);
 }
 
+// 初始化硬件状态消息
+// 设置硬件组件名称和类型信息，用于内省和诊断
 CallbackReturn HardwareComponentInterface::init_hardware_status_message(
   control_msgs::msg::HardwareStatus & /*msg_template*/)
 {
@@ -262,6 +266,8 @@ CallbackReturn HardwareComponentInterface::init_hardware_status_message(
   return CallbackReturn::SUCCESS;
 }
 
+// 更新硬件状态消息
+// 更新当前生命周期状态和命令接口名称列表
 return_type HardwareComponentInterface::update_hardware_status_message(
   control_msgs::msg::HardwareStatus & /*msg*/)
 {
@@ -269,10 +275,9 @@ return_type HardwareComponentInterface::update_hardware_status_message(
   return return_type::OK;
 }
 
-// 默认的 on_init 实现：根据硬件类型解析接口描述
-// actuator: 解析关节的状态和命令接口
-// sensor: 解析关节和传感器的状态接口
-// system: 解析关节、传感器、GPIO的状态和命令接口
+// 用户自定义初始化回调（虚函数）
+// 子类应重写此方法实现硬件特定的初始化逻辑
+// 如：打开设备文件、建立通信连接、分配缓冲区等
 CallbackReturn HardwareComponentInterface::on_init(
   const hardware_interface::HardwareComponentInterfaceParams & params)
 {
@@ -430,6 +435,9 @@ std::vector<CommandInterface::SharedPtr> HardwareComponentInterface::on_export_c
   return command_interfaces;
 }
 
+// 准备命令模式切换（虚函数）
+// 通知硬件即将发生的命令接口变化
+// 默认实现返回 OK
 return_type HardwareComponentInterface::prepare_command_mode_switch(
   const std::vector<std::string> & /*start_interfaces*/,
   const std::vector<std::string> & /*stop_interfaces*/)
@@ -437,6 +445,9 @@ return_type HardwareComponentInterface::prepare_command_mode_switch(
   return return_type::OK;
 }
 
+// 执行命令模式切换（虚函数）
+// 通知硬件接口变化已完成
+// 默认实现返回 OK
 return_type HardwareComponentInterface::perform_command_mode_switch(
   const std::vector<std::string> & /*start_interfaces*/,
   const std::vector<std::string> & /*stop_interfaces*/)
@@ -526,6 +537,8 @@ const rclcpp_lifecycle::State & HardwareComponentInterface::get_lifecycle_state(
   return lifecycle_state_;
 }
 
+// 设置生命周期状态
+// 内部方法，用于状态转换时更新当前生命周期状态
 void HardwareComponentInterface::set_lifecycle_state(const rclcpp_lifecycle::State & new_state)
 {
   lifecycle_state_ = new_state;
@@ -537,6 +550,7 @@ uint8_t HardwareComponentInterface::get_lifecycle_id() const
   return impl_->lifecycle_id_cache_.load(std::memory_order_acquire);
 }
 
+// 检查是否导出了指定名称的状态接口
 bool HardwareComponentInterface::has_state(const std::string & interface_name) const
 {
   return impl_->hardware_states_.find(interface_name) != impl_->hardware_states_.end();
@@ -556,6 +570,7 @@ const StateInterface::SharedPtr & HardwareComponentInterface::get_state_interfac
   return it->second;
 }
 
+// 检查是否导出了指定名称的命令接口
 bool HardwareComponentInterface::has_command(const std::string & interface_name) const
 {
   return impl_->hardware_commands_.find(interface_name) != impl_->hardware_commands_.end();
@@ -586,7 +601,8 @@ rclcpp::Node::SharedPtr HardwareComponentInterface::get_node() const
 
 const HardwareInfo & HardwareComponentInterface::get_hardware_info() const { return info_; }
 
-// 暂停异步操作：如果存在异步处理器，则暂停其执行
+// 暂停异步操作
+// 在硬件停用时调用，暂停后台异步任务
 void HardwareComponentInterface::pause_async_operations()
 
 {
@@ -596,7 +612,8 @@ void HardwareComponentInterface::pause_async_operations()
   }
 }
 
-// 激活前的准备工作：重置读写返回信息和执行时间
+// 准备激活
+// 在激活前重置异步操作，确保硬件就绪
 void HardwareComponentInterface::prepare_for_activation()
 {
   impl_->read_return_info_.store(return_type::OK, std::memory_order_release);
@@ -605,7 +622,8 @@ void HardwareComponentInterface::prepare_for_activation()
   impl_->write_execution_time_.store(std::chrono::nanoseconds::zero(), std::memory_order_release);
 }
 
-// 启用或禁用内省（统计数据收集）
+// 启用或禁用内省功能
+// 内省功能允许外部工具查询硬件状态和接口信息
 void HardwareComponentInterface::enable_introspection(bool enable)
 {
   if (enable)

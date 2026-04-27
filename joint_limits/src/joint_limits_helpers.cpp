@@ -31,7 +31,10 @@ namespace joint_limits
 namespace internal
 {
 /**
- * @brief Check if the limits are in the correct order and swap them if they are not.
+ * @brief 检查限位上下限顺序，若下限大于上限则交换两者
+ * 确保限位值始终满足 lower_limit <= upper_limit 的约束
+ * @param lower_limit 限位下限引用，可能被修改
+ * @param upper_limit 限位上限引用，可能被修改
  */
 void check_and_swap_limits(double & lower_limit, double & upper_limit)
 {
@@ -42,12 +45,11 @@ void check_and_swap_limits(double & lower_limit, double & upper_limit)
 }
 
 /**
- * @brief Verify if the actual position is within the limits and if not, log an error and throw an
- * exception.
- * @param joint_name The name of the joint.
- * @param actual_position The actual position of the joint.
- * @param limits The joint limits.
- * @throws std::runtime_error if the actual position is out of bounds.
+ * @brief 验证实际位置是否在关节限位范围内，若超出则记录错误并抛出异常
+ * @param joint_name 关节名称，用于错误日志输出
+ * @param actual_position 关节的实际位置值
+ * @param limits 关节限位参数，包含位置上下限
+ * @throws std::runtime_error 当实际位置超出限位范围时抛出异常
  */
 void verify_actual_position_within_limits(
   const std::string & joint_name, const std::optional<double> & actual_position,
@@ -75,6 +77,11 @@ void verify_actual_position_within_limits(
 }
 }  // namespace internal
 
+// 更新上一命令缓存
+// 将当前期望命令值（desired）中的各控制量复制到上一命令缓存（prev_command）中
+// 用于下一周期限位计算时作为参考基准
+// @param desired 当前期望的关节控制接口数据
+// @param prev_command 上一命令缓存，将被更新
 void update_prev_command(
   const JointControlInterfacesData & desired, JointControlInterfacesData & prev_command)
 {
@@ -101,8 +108,23 @@ void update_prev_command(
   prev_command.joint_name = desired.joint_name;
 }
 
+// 判断值是否超出指定范围（被限位）
+// @param value 待检查的值
+// @param min 允许的最小值
+// @param max 允许的最大值
+// @return true 如果值小于最小值或大于最大值，表示需要限位
 bool is_limited(double value, double min, double max) { return value < min || value > max; }
 
+// 计算位置限位边界
+// 综合考虑关节的位置硬限位和速度/加速度约束，计算当前周期允许的位置命令范围
+// 使用上一命令位置作为参考基准（比实际位置更少保守），避免因通信延迟导致过度限位
+// @param joint_name 关节名称，用于日志输出
+// @param limits 关节限位参数
+// @param act_vel 实际速度值
+// @param act_pos 实际位置值
+// @param prev_command_pos 上一命令位置值
+// @param dt 时间步长（秒）
+// @return PositionLimits 包含位置下限和上限的结构体
 PositionLimits compute_position_limits(
   const std::string & joint_name, const joint_limits::JointLimits & limits,
   const std::optional<double> & act_vel, const std::optional<double> & act_pos,
@@ -133,6 +155,16 @@ PositionLimits compute_position_limits(
   return pos_limits;
 }
 
+// 计算速度限位边界
+// 综合考虑关节的速度硬限位、位置限位和加速度约束，计算当前周期允许的速度命令范围
+// 当实际位置超出限位时，将速度范围限制为零以防止进一步越界
+// @param joint_name 关节名称，用于日志输出
+// @param limits 关节限位参数
+// @param desired_vel 期望速度值
+// @param act_pos 实际位置值
+// @param prev_command_vel 上一命令速度值
+// @param dt 时间步长（秒）
+// @return VelocityLimits 包含速度下限和上限的结构体
 VelocityLimits compute_velocity_limits(
   const std::string & joint_name, const joint_limits::JointLimits & limits,
   const double & desired_vel, const std::optional<double> & act_pos,
@@ -191,6 +223,15 @@ VelocityLimits compute_velocity_limits(
   return vel_limits;
 }
 
+// 计算力矩（effort）限位边界
+// 综合考虑关节的力矩硬限位、位置限位和速度限位，计算当前周期允许的力矩命令范围
+// 当关节位于位置限位边界且向限位方向运动时，将对应方向的力矩限制为零
+// 当关节速度超出速度限位时，将对应方向的力矩限制为零
+// @param limits 关节限位参数
+// @param act_pos 实际位置值
+// @param act_vel 实际速度值
+// @param dt 时间步长（秒），当前未使用
+// @return EffortLimits 包含力矩下限和上限的结构体
 EffortLimits compute_effort_limits(
   const joint_limits::JointLimits & limits, const std::optional<double> & act_pos,
   const std::optional<double> & act_vel, double /*dt*/)
@@ -224,6 +265,13 @@ EffortLimits compute_effort_limits(
   return eff_limits;
 }
 
+// 计算加速度限位边界
+// 根据期望加速度方向和当前速度方向判断是加速还是减速
+// 减速时使用减速度限位（若有），否则使用加速度限位
+// @param limits 关节限位参数
+// @param desired_acceleration 期望加速度值
+// @param actual_velocity 实际速度值，用于判断加速/减速方向
+// @return AccelerationLimits 包含加速度下限和上限的结构体
 AccelerationLimits compute_acceleration_limits(
   const joint_limits::JointLimits & limits, double desired_acceleration,
   std::optional<double> actual_velocity)

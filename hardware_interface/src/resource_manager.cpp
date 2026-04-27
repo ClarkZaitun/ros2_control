@@ -189,6 +189,8 @@ public:
   }
 
   // 通过 pluginlib 加载硬件插件
+  // 根据 HardwareInfo 中的 hardware_plugin_name 创建硬件接口实例
+  // 同时初始化 HardwareComponentInfo 静态信息
   // HardwareT: 硬件组件类型（Actuator/Sensor/System）
   // HardwareInterfaceT: 硬件接口类型（ActuatorInterface/SensorInterface/SystemInterface）
   template <class HardwareT, class HardwareInterfaceT>
@@ -263,7 +265,9 @@ public:
     return is_loaded;
   }
 
-  // 初始化硬件组件：调用 hardware.initialize() 并检查状态转换是否成功
+  // 初始化硬件组件
+  // 构造 HardwareComponentParams 参数，调用硬件的 initialize() 方法
+  // 成功初始化后硬件进入 UNCONFIGURED 状态
   template <class HardwareT>
   bool initialize_hardware(
     const hardware_interface::HardwareComponentParams & params, HardwareT & hardware)
@@ -316,7 +320,9 @@ public:
     return result;
   }
 
-  // 配置硬件组件：执行 configure 状态转换，成功后将接口添加到可用列表
+  // 配置硬件组件
+  // 调用硬件的 configure() 方法，将状态从 UNCONFIGURED 转换为 INACTIVE
+  // 配置成功后，将该硬件的所有状态和命令接口添加到可用列表
   template <class HardwareT>
   bool configure_hardware(HardwareT & hardware)
   {
@@ -535,6 +541,8 @@ public:
     return result;
   }
 
+  // 激活硬件组件
+  // 调用硬件的 activate() 方法，将状态从 INACTIVE 转换为 ACTIVE
   template <class HardwareT>
   bool activate_hardware(HardwareT & hardware)
   {
@@ -1446,7 +1454,9 @@ public:
   unsigned int cm_update_rate_ = 100;
 };
 
-// ResourceManager 构造函数：仅创建资源存储，不加载硬件
+// 资源管理器构造函数（仅时钟和日志接口版本）
+// 初始化 ResourceStorage（内部存储），配置时钟和日志
+// 不加载任何硬件组件，仅创建空的资源管理器
 ResourceManager::ResourceManager(
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface)
@@ -1462,6 +1472,11 @@ ResourceManager::ResourceManager(rclcpp::Clock::SharedPtr clock, rclcpp::Logger 
 
 ResourceManager::~ResourceManager() = default;
 
+// 资源管理器构造函数（带URDF、节点接口版本）
+// 初始化 ResourceStorage，配置时钟和日志
+// 如果提供URDF，则自动加载和初始化所有硬件组件
+// activate_all 为 true 时，加载后自动将所有硬件激活到 ACTIVE 状态
+// update_rate 指定控制器管理器的更新频率
 ResourceManager::ResourceManager(
   const std::string & urdf, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface, bool activate_all,
@@ -1474,6 +1489,11 @@ ResourceManager::ResourceManager(
 {
 }
 
+// 资源管理器构造函数（带URDF、Clock/Logger版本）
+// 初始化 ResourceStorage，配置时钟和日志
+// 如果提供URDF，则自动加载和初始化所有硬件组件
+// activate_all 为 true 时，加载后自动将所有硬件激活到 ACTIVE 状态
+// update_rate 指定控制器管理器的更新频率
 ResourceManager::ResourceManager(
   const std::string & urdf, rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger,
   bool activate_all, const unsigned int update_rate)
@@ -1481,6 +1501,10 @@ ResourceManager::ResourceManager(
 {
 }
 
+// 资源管理器构造函数（参数结构体版本，核心实现）
+// 初始化 ResourceStorage，配置时钟和日志
+// 如果 load 为 true，则自动加载和初始化所有硬件组件
+// 如果 params.activate_all 为 true，则加载后自动将所有硬件激活到 ACTIVE 状态
 ResourceManager::ResourceManager(
   const hardware_interface::ResourceManagerParams & params, bool load)
 : resource_storage_(std::make_unique<ResourceStorage>(params.clock, params.logger)), params_(params)
@@ -1534,9 +1558,15 @@ bool ResourceManager::shutdown_components()
 }
 
 // CM API: Called in "callback/slow"-thread
-// 加载并初始化所有硬件组件
-// 从 URDF 解析硬件信息，根据类型分别加载执行器、传感器和系统组件
-// 加载成功后验证存储的接口是否与 URDF 描述一致
+// 加载和初始化所有硬件组件
+// 核心流程：
+// 1. 从URDF解析硬件配置信息（parse_control_resources_from_urdf）
+// 2. 按类型（执行器/传感器/系统）遍历硬件配置
+// 3. 通过pluginlib动态加载硬件插件
+// 4. 初始化每个硬件组件（调用 on_init）
+// 5. 导出状态和命令接口
+// 6. 验证所有声明的接口是否都已导出
+// 线程安全：使用 resources_lock_ 和 resource_interfaces_lock_ 保护
 bool ResourceManager::load_and_initialize_components(
   const hardware_interface::ResourceManagerParams & params)
 {
@@ -1632,7 +1662,10 @@ bool ResourceManager::load_and_initialize_components(
   return components_are_loaded_and_initialized_;
 }
 
-// 从 URDF 导入关节限位器
+// 导入关节限位器
+// 从URDF解析的硬件配置中提取关节限位参数
+// 为每个关节创建对应的限位器（饱和限位或软限位）
+// 并将限位回调绑定到命令接口上
 void ResourceManager::import_joint_limiters(const std::string & urdf)
 {
   std::lock_guard<std::recursive_mutex> guard(joint_limiters_lock_);
@@ -1646,7 +1679,9 @@ bool ResourceManager::are_components_initialized() const
 }
 
 // CM API: Called in "update"-thread
-// 声明状态接口：控制器通过此方法获取只读的状态接口
+// 声明借用一个状态接口
+// 控制器通过此方法获取对硬件状态数据的只读访问权
+// 返回 LoanedStateInterface（RAII包装），析构时自动释放
 LoanedStateInterface ResourceManager::claim_state_interface(const std::string & key)
 {
   if (!state_interface_is_available(key))
@@ -1900,8 +1935,10 @@ bool ResourceManager::command_interface_is_claimed(const std::string & key) cons
 }
 
 // CM API: Called in "update"-thread
-// 声明命令接口：控制器通过此方法获取可写的命令接口
-// 每个命令接口同一时间只能被一个控制器声明（claimed）
+// 声明借用一个命令接口
+// 控制器通过此方法获取对硬件命令数据的写访问权
+// 同一命令接口在同一时间只能被一个控制器声明（互斥访问）
+// 返回 LoanedCommandInterface（RAII包装），析构时自动释放
 LoanedCommandInterface ResourceManager::claim_command_interface(const std::string & key)
 {
   if (!command_interface_is_available(key))
@@ -2039,8 +2076,9 @@ ResourceManager::get_soft_joint_limits() const
 }
 
 // CM API: Called in "callback/slow"-thread
-// 准备命令模式切换：在控制器激活/停用前调用
-// 通知硬件组件即将启用的和停用的命令接口列表
+// 准备命令模式切换
+// 在控制器激活/停用前调用，通知硬件组件即将发生的接口变化
+// 检查接口是否存在和可用，然后调用各硬件组件的 prepare_command_mode_switch
 bool ResourceManager::prepare_command_mode_switch(
   const std::vector<std::string> & start_interfaces,
   const std::vector<std::string> & stop_interfaces)
@@ -2198,8 +2236,9 @@ bool ResourceManager::prepare_command_mode_switch(
 }
 
 // CM API: Called in "update"-thread
-// 执行命令模式切换：实际执行命令接口的切换操作
-// 切换成功后重置关节限位器的内部状态
+// 执行命令模式切换
+// 在控制器激活/停用后调用，通知硬件组件接口变化已完成
+// 调用各硬件组件的 perform_command_mode_switch，并重置关节限位器
 bool ResourceManager::perform_command_mode_switch(
   const std::vector<std::string> & start_interfaces,
   const std::vector<std::string> & stop_interfaces)
@@ -2321,8 +2360,10 @@ bool ResourceManager::perform_command_mode_switch(
 }
 
 // CM API: Called in "callback/slow"-thread
-// 设置指定硬件组件的生命周期状态
-// 在执行器、传感器和系统容器中查找目标组件并执行状态转换
+// 设置硬件组件的生命周期状态
+// 根据当前状态和目标状态，自动执行必要的中间状态转换
+// 例如：从 UNCONFIGURED 到 ACTIVE 需要先 configure 再 activate
+// 状态转换路径：UNCONFIGURED -> configure -> INACTIVE -> activate -> ACTIVE
 return_type ResourceManager::set_component_state(
   const std::string & component_name, rclcpp_lifecycle::State & target_state)
 {
@@ -2408,8 +2449,9 @@ return_type ResourceManager::set_component_state(
 }
 
 // CM API: Called in "update"-thread
-// 强制执行所有关节的命令限位检查
-// 使用 try_to_lock 避免阻塞实时控制循环
+// 执行关节命令限位
+// 在写操作之前调用，检查并截断超出限位范围的命令值
+// 使用 try_to_lock 避免阻塞实时线程
 bool ResourceManager::enforce_command_limits(const rclcpp::Duration & period)
 {
   std::unique_lock<std::recursive_mutex> limiters_guard(joint_limiters_lock_, std::try_to_lock);
@@ -2431,9 +2473,11 @@ bool ResourceManager::enforce_command_limits(const rclcpp::Duration & period)
 }
 
 // CM API: Called in "update"-thread
-// 读取所有硬件组件的状态（在控制循环的更新线程中调用）
-// 处理不同读写速率的组件，并收集统计信息
-// 如果读取返回错误，则将组件转入错误状态并移除其可用接口
+// 读取所有硬件组件的状态数据
+// 遍历所有执行器、传感器和系统组件，调用各自的 read() 方法
+// 支持不同读写速率：硬件组件可以以低于控制器管理器的频率运行
+// 如果 read() 返回 ERROR，则将硬件置为错误状态并移除其可用接口
+// 如果 read() 返回 DEACTIVATE，则将硬件转为非活跃状态
 HardwareReadWriteStatus ResourceManager::read(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
@@ -2535,9 +2579,12 @@ HardwareReadWriteStatus ResourceManager::read(
 }
 
 // CM API: Called in "update"-thread
-// 写入所有硬件组件的命令（在控制循环的更新线程中调用）
-// 仅写入执行器和系统类型（传感器不需要写入）
-// 如果写入返回 DEACTIVATE，则将组件停用
+// 将命令写入所有硬件组件
+// 遍历所有执行器和系统组件，调用各自的 write() 方法
+// 传感器没有命令接口，因此不参与写操作
+// 支持不同读写速率：与 read() 相同的速率控制逻辑
+// 如果 write() 返回 ERROR，则将硬件置为错误状态
+// 如果 write() 返回 DEACTIVATE，则将硬件转为非活跃状态
 HardwareReadWriteStatus ResourceManager::write(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
@@ -2711,8 +2758,9 @@ hardware_interface::ResourceManagerParams ResourceManager::constructParams(
   return params;
 }
 
-// 验证存储：检查 URDF 中声明的所有接口是否都已成功导出
-// 如果有缺失的接口，则返回 false
+// 验证硬件接口存储的完整性
+// 检查URDF中声明的所有接口是否都已被硬件组件导出
+// 如果有缺失的接口则返回false，并输出详细的错误信息
 bool ResourceManager::validate_storage(
   const std::vector<hardware_interface::HardwareInfo> & hardware_info) const
 {
